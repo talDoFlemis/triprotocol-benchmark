@@ -1,3 +1,10 @@
+## [1.2.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.1.0...v1.2.0) (2025-10-23)
+
+### Features
+
+* add base serde ([1a5e63e](https://github.com/talDoFlemis/triprotocol-benchmark/commit/1a5e63eba41e1005bfe04dd9b3d34c86e8ee0df2))
+* add new tcp and protocol settings ([d391251](https://github.com/talDoFlemis/triprotocol-benchmark/commit/d3912518fc1c4d47820011ff1cfae04f73d89c51))
+
 ## [1.1.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.0.0...v1.1.0) (2025-10-23)
 
 ### Features
