@@ -1,3 +1,9 @@
+## [1.2.1](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.2.0...v1.2.1) (2025-10-23)
+
+### Bug Fixes
+
+* **handler:** wront tcp timeout ([2a89db3](https://github.com/talDoFlemis/triprotocol-benchmark/commit/2a89db397f091d5a9a45232dec3b353522e5adfc))
+
 ## [1.2.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.1.0...v1.2.0) (2025-10-23)
 
 ### Features
