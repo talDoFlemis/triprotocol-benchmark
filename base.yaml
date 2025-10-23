@@ -2,6 +2,8 @@ app:
   name: webserver
   version: 0.1.0
   env: base
+  tcp-timeout-in-seconds: 5
+  protocol-test-server-address: localhost:42069
 
 http:
   port: 42069

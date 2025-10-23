@@ -63,9 +63,11 @@ type OpenTelemetrySettings struct {
 }
 
 type AppSettings struct {
-	Name    string `mapstructure:"name"`
-	Version string `mapstructure:"version"`
-	Env     string `mapstructure:"env"`
+	Name                      string `mapstructure:"name"`
+	Version                   string `mapstructure:"version"`
+	Env                       string `mapstructure:"env"`
+	TCPTimeoutInSeconds       int    `mapstructure:"tcp-timeout-in-seconds" validate:"required"`
+	ProtocolTestServerAddress string `mapstructure:"protocol-test-server-address" validate:"required,hostname_port"`
 }
 
 type Settings struct {
