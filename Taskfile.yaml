@@ -1,0 +1,6 @@
+version: "3"
+
+tasks:
+  swag:generate:
+    desc: Generate swagger docs
+    cmd: swag init --output ./docs/swagger
