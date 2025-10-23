@@ -118,7 +118,7 @@ func (h *MainHandler) Auth(c echo.Context) error {
 		return err
 	}
 
-	conn, err := net.DialTimeout("tcp", h.appSettings.ProtocolTestServerAddress, time.Duration(h.appSettings.TCPTimeout)*time.Second)
+	conn, err := net.DialTimeout("tcp", h.appSettings.ProtocolTestServerAddress, time.Duration(h.appSettings.TCPTimeoutInSeconds)*time.Second)
 	if err != nil {
 		slog.Error("Error connecting to TCP server", slog.String("address", h.appSettings.ProtocolTestServerAddress), slog.String("error", err.Error()))
 		return err
@@ -173,7 +173,7 @@ func (h *MainHandler) WriteIntoConnection(ctx context.Context, conn net.Conn, da
 	_, span := tracer.Start(ctx, "MainHandler.WriteIntoConnection")
 	defer span.End()
 
-	conn.SetDeadline(time.Now().Add(time.Duration(h.appSettings.TCPTimeout) * time.Second))
+	conn.SetDeadline(time.Now().Add(time.Duration(h.appSettings.TCPTimeoutInSeconds) * time.Second))
 	_, err := conn.Write(data)
 	if err != nil {
 		slog.Error("Error writing to TCP server", slog.String("address", h.appSettings.ProtocolTestServerAddress), slog.String("error", err.Error()))
@@ -188,7 +188,7 @@ func (h *MainHandler) ReadFromConnection(ctx context.Context, conn net.Conn) ([]
 	defer span.End()
 	buf := make([]byte, 4096)
 
-	conn.SetDeadline(time.Now().Add(time.Duration(h.appSettings.TCPTimeout) * time.Second))
+	conn.SetDeadline(time.Now().Add(time.Duration(h.appSettings.TCPTimeoutInSeconds) * time.Second))
 	_, err := conn.Read(buf)
 	if err != nil {
 		slog.Error("Error reading from TCP server", slog.String("address", h.appSettings.ProtocolTestServerAddress), slog.String("error", err.Error()))
