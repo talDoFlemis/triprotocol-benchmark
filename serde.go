@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"log/slog"
 	"reflect"
+	"strings"
 
 	"google.golang.org/protobuf/proto"
 )
+
+const STRINGS_TAG = "strings"
 
 type Serde interface {
 	Marshal(v any) ([]byte, error)
@@ -40,12 +43,102 @@ type (
 
 // Marshal implements Serde.
 func (s StringSerde) Marshal(v any) ([]byte, error) {
-	panic("unimplemented")
+	el := reflect.ValueOf(v).Elem()
+	t := el.Type()
+	args := []string{}
+
+	commandName, fieldToIgnore := s.getCommandName(t)
+
+	args = append(args, commandName)
+
+	for i := range el.NumField() {
+		if i == fieldToIgnore {
+			continue
+		}
+
+		field := t.Field(i)
+
+		fieldValue := el.Field(i).String()
+		fieldName := field.Tag.Get(STRINGS_TAG)
+		args = append(args, fmt.Sprintf("%s=%s", fieldName, fieldValue))
+	}
+
+	// Add terminator
+	args = append(args, "FIM")
+	result := strings.Join(args, "|")
+
+	result += "\n"
+
+	return []byte(result), nil
+}
+
+func (s StringSerde) getCommandName(t reflect.Type) (string, int) {
+	// Command name defaults to struct name
+	commandName := t.Name()
+	commandIdx := -1
+
+	for i := range t.NumField() {
+		field := t.Field(i)
+
+		if field.Tag.Get(STRINGS_TAG) == "id" {
+			commandName = strings.ToUpper(field.Name)
+			commandIdx = i
+			break
+		}
+	}
+
+	return commandName, commandIdx
 }
 
 // Unmarshal implements Serde.
 func (s StringSerde) Unmarshal(data []byte, v any) error {
-	panic("unimplemented")
+	el := reflect.ValueOf(v).Elem()
+	t := el.Type()
+
+	if t.Kind() != reflect.Struct {
+		return fmt.Errorf("one structs are supported, found %s", t.Kind().String())
+	}
+
+	args := strings.Split(string(data), "|")
+
+	if len(args) < 3 {
+		return fmt.Errorf("unknown size for args %d", len(args))
+	}
+
+	commandName, commandIdx := s.getCommandName(t)
+	commandFound := args[0]
+
+	if commandName != commandFound {
+		return fmt.Errorf("command not compatible with struct found: %s, expected %s", commandFound, commandName)
+	}
+
+	args = args[1 : len(args)-1]
+
+	argsMap := make(map[string]string, 1)
+
+	for _, arg := range args {
+		splittedArgs := strings.Split(arg, "=")
+		if len(splittedArgs) != 2 {
+			return fmt.Errorf("unknown size for splitted args found %d, expected 2, arg %s", len(splittedArgs), arg)
+		}
+
+		fieldTag := splittedArgs[0]
+		fieldValue := splittedArgs[1]
+		argsMap[fieldTag] = fieldValue
+	}
+
+	for i := range t.NumField() {
+		field := el.Field(i)
+		fieldTagValue := t.Field(i).Tag.Get(STRINGS_TAG)
+
+		if fieldTagValue == "-" || i == commandIdx {
+			continue
+		}
+
+		field.SetString(argsMap[fieldTagValue])
+	}
+
+	return nil
 }
 
 // Marshal implements Serde.
