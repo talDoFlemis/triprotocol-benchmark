@@ -1,3 +1,9 @@
+## [1.3.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.2.1...v1.3.0) (2025-10-28)
+
+### Features
+
+* add domain ([b4678fe](https://github.com/talDoFlemis/triprotocol-benchmark/commit/b4678fecf4f72282326cd8c0ac7d6a93947e2390))
+
 ## [1.2.1](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.2.0...v1.2.1) (2025-10-23)
 
 ### Bug Fixes
