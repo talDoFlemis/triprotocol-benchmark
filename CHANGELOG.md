@@ -1,3 +1,19 @@
+## [1.4.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.3.0...v1.4.0) (2025-10-29)
+
+### Features
+
+* add app layer ([887449e](https://github.com/talDoFlemis/triprotocol-benchmark/commit/887449ee538a124469e79982a0313b75510a00ba))
+* add custom validator ([5c92bb3](https://github.com/talDoFlemis/triprotocol-benchmark/commit/5c92bb3a7c08bd308ae4bb316662fb2c00f8dc59))
+* add git lfs to pdf ([e0d0947](https://github.com/talDoFlemis/triprotocol-benchmark/commit/e0d0947108fbdd64afe22a0aca39db76ef0c40e1))
+* add handler auth request ([f829711](https://github.com/talDoFlemis/triprotocol-benchmark/commit/f8297110b2c61e5bc087fc0fb842cb2546a54f0a))
+* add history and logout domain entities ([e8ae711](https://github.com/talDoFlemis/triprotocol-benchmark/commit/e8ae711fc5e82d6601c7eb0ae2c22280de6c7f19))
+* add protobuf definition ([18d1a38](https://github.com/talDoFlemis/triprotocol-benchmark/commit/18d1a38125baf112360324e518fadb71d1787989))
+* add protogenerated files ([8760669](https://github.com/talDoFlemis/triprotocol-benchmark/commit/8760669d5dff5723a64805b45a9e0268b7631cc7))
+* add roundtripper ([16f0476](https://github.com/talDoFlemis/triprotocol-benchmark/commit/16f047652fcd7494eeb99872d1dd7cbfd9acba4e))
+* add string serde tests ([f7a434f](https://github.com/talDoFlemis/triprotocol-benchmark/commit/f7a434fb04ba74cbad062f86fa67471fc5ad5797))
+* register custom validator and use app layer ([b972aba](https://github.com/talDoFlemis/triprotocol-benchmark/commit/b972aba80a1f2508c23ed2b7380017324b0a767e))
+* spec of project ([853684f](https://github.com/talDoFlemis/triprotocol-benchmark/commit/853684fcca7a99d951d8e812a960a2be6cab5666))
+
 ## [1.3.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.2.1...v1.3.0) (2025-10-28)
 
 ### Features
