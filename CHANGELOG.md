@@ -1,3 +1,9 @@
+## [1.5.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.4.0...v1.5.0) (2025-10-29)
+
+### Features
+
+* add roundtrip logs ([ceb6a23](https://github.com/talDoFlemis/triprotocol-benchmark/commit/ceb6a23c8c3616428bb0600e4af29048791e66d6))
+
 ## [1.4.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.3.0...v1.4.0) (2025-10-29)
 
 ### Features
