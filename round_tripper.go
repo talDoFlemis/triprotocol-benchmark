@@ -35,9 +35,10 @@ func NewTCPRoundTripper(dialTimeout time.Duration, writeTimeout time.Duration, r
 
 // RequestReply implements RoundTripper.
 func (t *TCPRoundTripper) RequestReply(ctx context.Context, address string, req []byte) ([]byte, error) {
-	ctx, span := tracer.Start(ctx, "TCPRoundTripper.RequestReply")
+	_, span := tracer.Start(ctx, "TCPRoundTripper.RequestReply")
 	defer span.End()
 
+	slog.DebugContext(ctx, "Connecting to TCP server", slog.String("address", address))
 	conn, err := net.DialTimeout("tcp", address, t.DialTimeout)
 	if err != nil {
 		slog.Error("Error connecting to TCP server", slog.String("address", address), slog.String("error", err.Error()))
@@ -45,6 +46,7 @@ func (t *TCPRoundTripper) RequestReply(ctx context.Context, address string, req 
 	}
 	defer conn.Close()
 
+	slog.DebugContext(ctx, "Sending request to TCP server", slog.String("address", address))
 	conn.SetDeadline(time.Now().Add(t.WriteTimeout))
 	_, err = conn.Write(req)
 	if err != nil {
@@ -60,6 +62,8 @@ func (t *TCPRoundTripper) RequestReply(ctx context.Context, address string, req 
 		slog.Error("Error reading from TCP server", slog.String("address", address), slog.String("error", err.Error()))
 		return nil, err
 	}
+
+	slog.DebugContext(ctx, "Received response from TCP server", slog.String("address", address))
 
 	return buf, nil
 }
