@@ -1,15 +1,10 @@
 package main
 
-import "time"
-
-type AuthRequest struct {
-	Protocol   string    `query:"protocol" validate:"required, oneof=json proto string"`
-	Enrollment string    `json:"enrollment" validate:"required"`
-	Timestamp  time.Time `json:"timestamp" validate:"required"`
+type HandlerRequest[T any] struct {
+	Protocol string `query:"protocolo" validate:"required, oneof=json proto string"`
+	Payload  T
 }
 
-type ServerAuthRequest struct{}
-
-type AuthResponse struct {
-	Token string `json:"token"`
+type HandlerAuthRequest struct {
+	HandlerRequest[AuthRequest]
 }
