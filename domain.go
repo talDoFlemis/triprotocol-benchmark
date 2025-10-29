@@ -1,6 +1,67 @@
 package main
 
-import "time"
+import (
+	"time"
+)
+
+var _ error = (*PresentationLayerErrorResponse)(nil)
+
+type PresentationLayerErrorResponse struct {
+	Code    string         `json:"code"`
+	Message string         `json:"message"`
+	Details map[string]any `json:"details"`
+}
+
+// Error implements error.
+func (a *PresentationLayerErrorResponse) Error() string {
+	panic("unimplemented")
+}
+
+type PresentationLayerRequest struct {
+	Token string
+	Body  OperationRequest
+}
+
+type PresentationLayerResponse struct {
+	Body       OperationResponse
+	Err        PresentationLayerErrorResponse
+	StatusCode int
+}
+
+type OperationRequest interface {
+	OperationName() string
+}
+
+type OperationResponse interface {
+	OperationResponseName() string
+}
+
+var (
+	_ OperationRequest  = (*AuthRequest)(nil)
+	_ OperationResponse = (*AuthResponse)(nil)
+	_ OperationRequest  = (*LogoutRequest)(nil)
+	_ OperationResponse = (*LogoutResponse)(nil)
+)
+
+type AuthRequest struct {
+	StudentID string `json:"aluno_id" validate:"required"`
+}
+
+// OperationName implements OperationRequest.
+func (a AuthRequest) OperationName() string {
+	return "AUTH"
+}
+
+type AuthResponse struct {
+	Token      string `json:"token"`
+	Name       string `json:"nome"`
+	Enrollment string `json:"matricula"`
+}
+
+// OperationResponseName implements OperationResponse.
+func (a AuthResponse) OperationResponseName() string {
+	panic("unimplemented")
+}
 
 type EchoRequest struct {
 	Message string
@@ -15,7 +76,7 @@ type EchoResponse struct {
 }
 
 type SumRequest struct {
-	Numbers []int `json:"numeros" validate:"required,min=1"`
+	Numbers []int `json:"numeros" validate:"required,min=1,max=1000"`
 }
 
 type SumResponse struct {
@@ -52,7 +113,7 @@ type StatusResponse struct {
 }
 
 type HistoryRequest struct {
-	Limit int `json:"limite" validate:"required,min=1"`
+	Limit int `json:"limite" validate:"required,min=1,max=100"`
 }
 
 type OperationRecord struct {
@@ -72,7 +133,17 @@ type HistoryResponse struct {
 
 type LogoutRequest struct{}
 
+// OperationName implements OperationRequest.
+func (l *LogoutRequest) OperationName() string {
+	panic("unimplemented")
+}
+
 type LogoutResponse struct {
 	Message         string `json:"mensagem"`
 	FinishedSession string `json:"sessao_encerrada"`
+}
+
+// OperationResponseName implements OperationResponse.
+func (l LogoutResponse) OperationResponseName() string {
+	panic("unimplemented")
 }

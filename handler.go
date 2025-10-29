@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"log/slog"
-	"net"
 	"net/http"
 	"time"
 
@@ -34,7 +33,7 @@ func NewMainHandler(httpSettings *HTTPSettings, appSettings *AppSettings, health
 
 	e.HideBanner = true
 
-	// Set custom error handler
+	e.Validator = &CustomValidator{validator: GetValidator()}
 	e.HTTPErrorHandler = GlobalErrorHandler
 
 	e.Use(slogecho.New(logger))
@@ -76,14 +75,6 @@ func NewMainHandler(httpSettings *HTTPSettings, appSettings *AppSettings, health
 	return h
 }
 
-// Health godoc
-//
-// @Summary Check the health of the service
-// @Tags health
-// @Produce json
-// @Success 200 {object} healthgo.Check
-// @Failure 503 {object} healthgo.Check
-// @Router /healthz [get]
 func (h *MainHandler) Health(c echo.Context) error {
 	check := h.health.Measure(c.Request().Context())
 
@@ -95,107 +86,39 @@ func (h *MainHandler) Health(c echo.Context) error {
 	return c.JSON(statusCode, check)
 }
 
-// Auth godoc
-//
-// @Summary Authenticate the user
-// @Tags alan
-// @Accept       json
-// @Produce json
-// @Param        enumstring    query     protocol  true  "protocol to use"  Enums(string,json,proto)
-// @Param request body AuthRequest true "AuthRequest"
-// @Success 200 {object} AuthResponse
-// @Failure 401 {string} string "Unauthorized"
-// @Failure 422 {object} ValidationErrorResponse
-// @Router /auth [post]
 func (h *MainHandler) Auth(c echo.Context) error {
 	ctx, span := tracer.Start(c.Request().Context(), "MainHandler.Auth")
 	defer span.End()
 
-	var req AuthRequest
+	var req HandlerAuthRequest
 
 	err := c.Bind(&req)
 	if err != nil {
 		return err
 	}
 
-	conn, err := net.DialTimeout("tcp", h.appSettings.ProtocolTestServerAddress, time.Duration(h.appSettings.TCPTimeoutInSeconds)*time.Second)
+	err = c.Validate(&req)
 	if err != nil {
-		slog.Error("Error connecting to TCP server", slog.String("address", h.appSettings.ProtocolTestServerAddress), slog.String("error", err.Error()))
 		return err
 	}
-	defer conn.Close()
+
+	appRequest := AuthRequest{
+		StudentID: req.Payload.StudentID,
+	}
 
 	serde, err := h.getProtocolSerde(req.Protocol)
 	if err != nil {
 		return err
 	}
 
-	data, err := serde.Marshal(req)
-	if err != nil {
-		slog.Error("Error serializing request", slog.String("protocol", req.Protocol), slog.String("error", err.Error()))
-		return err
-	}
+	appClient := NewAppLayerClient[AuthRequest, AuthResponse](serde, DefaultTCPRoundTripper, h.appSettings)
 
-	rawBytes, err := h.RequestReply(ctx, conn, data)
+	resp, err := appClient.Auth(ctx, "", &appRequest)
 	if err != nil {
-		return err
-	}
-
-	resp := AuthResponse{}
-
-	err = serde.Unmarshal(rawBytes, &resp)
-	if err != nil {
-		slog.Error("Error unmarshaling response", slog.String("protocol", req.Protocol), slog.String("error", err.Error()))
 		return err
 	}
 
 	return c.JSON(http.StatusOK, &resp)
-}
-
-func (h *MainHandler) RequestReply(ctx context.Context, conn net.Conn, data []byte) ([]byte, error) {
-	ctx, span := tracer.Start(ctx, "MainHandler.RequestReply")
-	defer span.End()
-
-	err := h.WriteIntoConnection(ctx, conn, data)
-	if err != nil {
-		return nil, err
-	}
-
-	rawResponse, err := h.ReadFromConnection(ctx, conn)
-	if err != nil {
-		return nil, err
-	}
-
-	return rawResponse, nil
-}
-
-func (h *MainHandler) WriteIntoConnection(ctx context.Context, conn net.Conn, data []byte) error {
-	_, span := tracer.Start(ctx, "MainHandler.WriteIntoConnection")
-	defer span.End()
-
-	conn.SetDeadline(time.Now().Add(time.Duration(h.appSettings.TCPTimeoutInSeconds) * time.Second))
-	_, err := conn.Write(data)
-	if err != nil {
-		slog.Error("Error writing to TCP server", slog.String("address", h.appSettings.ProtocolTestServerAddress), slog.String("error", err.Error()))
-		return err
-	}
-
-	return nil
-}
-
-func (h *MainHandler) ReadFromConnection(ctx context.Context, conn net.Conn) ([]byte, error) {
-	_, span := tracer.Start(ctx, "MainHandler.ReadFromConnection")
-	defer span.End()
-	buf := make([]byte, 4096)
-
-	conn.SetDeadline(time.Now().Add(time.Duration(h.appSettings.TCPTimeoutInSeconds) * time.Second))
-	_, err := conn.Read(buf)
-	if err != nil {
-		slog.Error("Error reading from TCP server", slog.String("address", h.appSettings.ProtocolTestServerAddress), slog.String("error", err.Error()))
-		return nil, err
-	}
-
-	return buf, nil
 }
 
 func (h *MainHandler) getProtocolSerde(protocol string) (Serde, error) {
