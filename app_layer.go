@@ -72,12 +72,12 @@ func (c *AppLayerClient[T, R]) Do(ctx context.Context, address string, req T, to
 	ctx, span := tracer.Start(ctx, "AppLayerClient.Do", trace.WithAttributes(
 		attribute.String("applayer.token", token),
 		attribute.String("transportlayer.address", address),
-		attribute.String("applayer.operation_name", req.OperationName()),
+		attribute.String("applayer.operation_name", req.CommandOrOperationName()),
 	))
 	defer span.End()
 
 	logger := slog.With(
-		slog.String("applayer.operation_name", req.OperationName()),
+		slog.String("applayer.operation_name", req.CommandOrOperationName()),
 		slog.String("applayer.token", token),
 		slog.String("address", address),
 	)
@@ -101,7 +101,7 @@ func (c *AppLayerClient[T, R]) Logout(ctx context.Context, address string, req *
 	defer span.End()
 
 	logger := slog.With(
-		slog.String("applayer.operation_name", req.OperationName()),
+		slog.String("applayer.operation_name", req.CommandOrOperationName()),
 		slog.String("applayer.token", token),
 		slog.String("address", address),
 	)
@@ -123,12 +123,12 @@ func (c *AppLayerClient[T, R]) internalDo(ctx context.Context, address string, r
 	ctx, span := tracer.Start(ctx, "AppLayerClient.internalDo", trace.WithAttributes(
 		attribute.String("applayer.token", token),
 		attribute.String("transportlayer.address", address),
-		attribute.String("applayer.operation_name", req.OperationName()),
+		attribute.String("applayer.operation_name", req.CommandOrOperationName()),
 	))
 	defer span.End()
 
 	logger := slog.With(
-		slog.String("applayer.operation_name", req.OperationName()),
+		slog.String("applayer.operation_name", req.CommandOrOperationName()),
 		slog.String("applayer.token", token),
 		slog.String("address", address),
 	)
