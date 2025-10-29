@@ -27,8 +27,7 @@ type SumResponse struct {
 	Amount           float64 `json:"quantidade"`
 }
 
-type TimestampRequest struct {
-}
+type TimestampRequest struct{}
 
 type TimestampResponse struct {
 	FormatedTimestamp string `json:"timestamp_formatado"`
@@ -50,4 +49,30 @@ type StatusResponse struct {
 	DatabaseStatistics  string    `json:"estatisticas_banco,omitempty"`
 	InUseMemory         string    `json:"memoria_uso,omitempty"`
 	RecentConnections   string    `json:"conexoes_recentes,omitempty"`
+}
+
+type HistoryRequest struct {
+	Limit int `json:"limite" validate:"required,min=1"`
+}
+
+type OperationRecord struct {
+	ID         string         `json:"id"`
+	Operation  string         `json:"operacao"`
+	Timestamp  time.Time      `json:"timestamp"`
+	Success    bool           `json:"sucesso"`
+	Parameters map[string]any `json:"parametros"`
+	Result     map[string]any `json:"resultado"`
+}
+
+type HistoryResponse struct {
+	Operations []OperationRecord `json:"operacoes"`
+	TotalFound int               `json:"total_encontrado"`
+	Statistics string            `json:"estatisticas"`
+}
+
+type LogoutRequest struct{}
+
+type LogoutResponse struct {
+	Message         string `json:"mensagem"`
+	FinishedSession string `json:"sessao_encerrada"`
 }
