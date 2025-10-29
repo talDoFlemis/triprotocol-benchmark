@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"sync"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -125,4 +126,35 @@ func getValueString(value interface{}) string {
 
 	// Don't expose sensitive values
 	return ""
+}
+
+type CustomValidator struct {
+	validator *validator.Validate
+}
+
+// Validate implements the echo.Validator interface
+func (cv *CustomValidator) Validate(i interface{}) error {
+	if err := cv.validator.Struct(i); err != nil {
+		// Optionally, you can customize the error response here
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	return nil
+}
+
+var (
+	validate *validator.Validate
+	once     sync.Once
+)
+
+// GetValidator returns a singleton validator instance
+func GetValidator() *validator.Validate {
+	once.Do(func() {
+		validate = validator.New(validator.WithRequiredStructEnabled())
+	})
+	return validate
+}
+
+// ValidateStruct validates a struct and returns validation errors
+func ValidateStruct(s interface{}) error {
+	return GetValidator().Struct(s)
 }
