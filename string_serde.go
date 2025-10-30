@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
@@ -123,50 +124,79 @@ func (s StringSerde) getCommandName(t reflect.Type) (string, int) {
 
 // Unmarshal implements Serde.
 func (s StringSerde) Unmarshal(data []byte, v any) error {
-	el := reflect.ValueOf(v).Elem()
-	t := el.Type()
+	typ := reflect.TypeOf(v)
+	value := reflect.ValueOf(v)
 
-	if t.Kind() != reflect.Struct {
-		return fmt.Errorf("one structs are supported, found %s", t.Kind().String())
+	if typ.Kind() != reflect.Pointer {
+		return fmt.Errorf("pointers are supported, found %s", typ.Kind().String())
 	}
 
-	args := strings.Split(string(data), "|")
-
-	if len(args) < 3 {
-		return fmt.Errorf("unknown size for args %d", len(args))
+	if value.IsNil() {
+		return fmt.Errorf("nil pointer provided")
 	}
 
-	commandName, commandIdx := s.getCommandName(t)
-	commandFound := args[0]
+	value = value.Elem()
+	typ = reflect.TypeOf(value)
 
-	if commandName != commandFound {
-		return fmt.Errorf("command not compatible with struct found: %s, expected %s", commandFound, commandName)
+	_, ok := v.(*PresentationLayerResponse)
+	if !ok {
+		return fmt.Errorf("expected presentatino layer response, found %v", value.Type().Kind())
 	}
 
-	args = args[1 : len(args)-1]
+	dataArgs := strings.Split(string(data), "|")
 
-	argsMap := make(map[string]string, 1)
+	if len(dataArgs) < 3 {
+		return fmt.Errorf("invalid response from server, expected at least 3 parameters, found %d, data %s", len(dataArgs), string(data))
+	}
 
-	for _, arg := range args {
-		splittedArgs := strings.Split(arg, "=")
-		if len(splittedArgs) != 2 {
-			return fmt.Errorf("unknown size for splitted args found %d, expected 2, arg %s", len(splittedArgs), arg)
+	// Ignore FIM token
+	dataArgs = dataArgs[:len(dataArgs)-1]
+
+	status := dataArgs[0]
+
+	// Remove status from slice
+	dataArgs = dataArgs[1:]
+
+	var statusCode int
+
+	switch status {
+	case "OK":
+		statusCode = http.StatusOK
+	case "INVALIDO":
+		statusCode = http.StatusUnprocessableEntity
+	case "ERROR":
+		statusCode = http.StatusInternalServerError
+	default:
+		return fmt.Errorf("unexpected status code %s", status)
+	}
+
+	properties := make(map[string]string)
+
+	for _, arg := range dataArgs {
+		split := strings.Split(arg, "=")
+		if len(split) != 2 {
+			return fmt.Errorf("expected 2 args after spliting argument, found %d", len(split))
 		}
 
-		fieldTag := splittedArgs[0]
-		fieldValue := splittedArgs[1]
-		argsMap[fieldTag] = fieldValue
+		property := split[0]
+		value := split[1]
+		properties[property] = value
 	}
 
-	for i := range t.NumField() {
-		field := el.Field(i)
-		fieldTagValue := t.Field(i).Tag.Get(STRINGS_TAG)
+	statusField := value.FieldByName("StatusCode")
+	statusField.SetInt(int64(statusCode))
 
-		if fieldTagValue == "-" || i == commandIdx {
-			continue
+	if statusCode != http.StatusOK {
+		err := PresentationLayerErrorResponse{
+			Code:    http.StatusText(statusCode),
+			Message: properties["msg"],
+			Details: make(map[string]any),
 		}
 
-		field.SetString(argsMap[fieldTagValue])
+		errField := value.FieldByName("Err")
+		errField.Set(reflect.ValueOf(err))
+
+		return nil
 	}
 
 	return nil

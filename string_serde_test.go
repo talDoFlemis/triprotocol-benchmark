@@ -11,7 +11,7 @@ import (
 // SOMA quebrado, diz que numeros nao eh uma lista
 // Historico quebrado, faltando informacao na stream
 
-func TestStringSerializationDeserialization(t *testing.T) {
+func TestStringSerialization(t *testing.T) {
 	tests := []struct {
 		name           string
 		inputStruct    any
@@ -92,6 +92,39 @@ func TestStringSerializationDeserialization(t *testing.T) {
 
 			require.NoError(t, err, "Marshal should not return an error")
 			assert.Equal(t, tt.expectedString, string(result), "Marshaled string should match expected output")
+		})
+	}
+}
+
+func TestStringDeserialization(t *testing.T) {
+	tests := []struct {
+		name           string
+		inputString    string
+		bindStruct     PresentationLayerResponse
+		expectedStruct PresentationLayerResponse
+	}{
+		{
+			name:        "AUTH Response",
+			inputString: "OK|token=tokenauth|nome=SAID CAVALCANTE RODRIGUES|matricula=538349|timestamp=2025-10-30T18:16:04.585339|FIM",
+			expectedStruct: PresentationLayerResponse{
+				Body: AuthResponse{
+					Token:     "tokenauth",
+					Name:      "SAID CAVALCANTE RODRIGUES",
+					Timestamp: time.Date(2025, 10, 30, 18, 16, 4, 585339, time.Local),
+				},
+			},
+			bindStruct: PresentationLayerResponse{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name+" - Unmarshall", func(t *testing.T) {
+			serde := StringSerde{}
+
+			err := serde.Unmarshal([]byte(tt.inputString), &tt.bindStruct)
+
+			require.NoError(t, err, "Unmarshall should not return an error")
+			assert.Equal(t, tt.expectedStruct, tt.bindStruct)
 		})
 	}
 }
