@@ -1,3 +1,20 @@
+## [1.6.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.5.0...v1.6.0) (2025-10-30)
+
+### Features
+
+* add server per protocol on settings ([a5f4706](https://github.com/talDoFlemis/triprotocol-benchmark/commit/a5f47062045ad97590ed1612e006685d81b7a051))
+* add server to main.go ([a64367d](https://github.com/talDoFlemis/triprotocol-benchmark/commit/a64367d9eeb9e2d0b786cfd24307ba61cb1ef233))
+* **handler:** group api to /api/v1 ([fcbc953](https://github.com/talDoFlemis/triprotocol-benchmark/commit/fcbc9533999fb5a4e04a2caa1c58541b0df6d0e4))
+
+### Code Refactoring
+
+* **domain:** update definitions fomr actual api ([6108634](https://github.com/talDoFlemis/triprotocol-benchmark/commit/6108634f255dc2439be8e8e70ae58fab461b4d7b))
+* **domain:** update timestamp response to match actual api ([603e0ab](https://github.com/talDoFlemis/triprotocol-benchmark/commit/603e0abb5d76af88e44efcac09336e82453cac4a))
+* **error:** handle validation errors first ([28b5b0d](https://github.com/talDoFlemis/triprotocol-benchmark/commit/28b5b0daa09ff48038336c5c22c2f18720fb4125))
+* **handler:** add getProtocolAddress ([ed189c8](https://github.com/talDoFlemis/triprotocol-benchmark/commit/ed189c8e76f0cfe69f3f2c7f1faf81d8c6894a3d))
+* **string_serde:** add bool and int serializing handling ([d888f36](https://github.com/talDoFlemis/triprotocol-benchmark/commit/d888f3626ef02a0dec7e59aca5e0726922bb8597))
+* **string_serde:** use new standard to unmarshall ([247ef2d](https://github.com/talDoFlemis/triprotocol-benchmark/commit/247ef2d8ce6e5af1c150beae71dcee251cd85c49))
+
 ## [1.5.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.4.0...v1.5.0) (2025-10-29)
 
 ### Features
