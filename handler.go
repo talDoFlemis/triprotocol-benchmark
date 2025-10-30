@@ -69,8 +69,9 @@ func NewMainHandler(httpSettings *HTTPSettings, appSettings *AppSettings, health
 		appSettings:  appSettings,
 	}
 
-	e.POST("/auth", h.Auth)
-	e.GET("/healthz", h.Health)
+	api := e.Group("/api/v1")
+	api.POST("/auth", h.Auth)
+	api.GET("/healthz", h.Health)
 
 	return h
 }
