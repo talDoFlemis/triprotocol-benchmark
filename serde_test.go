@@ -8,6 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// SOMA quebrado, diz que numeros nao eh uma lista
+// Historico quebrado, faltando informacao na stream
+
 func TestStringSerializationDeserialization(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -59,6 +62,26 @@ func TestStringSerializationDeserialization(t *testing.T) {
 				Token: "timestamptoken",
 			},
 			expectedString: "OP|token=timestamptoken|operacao=timestamp|FIM\n",
+		},
+		{
+			name: "Status request",
+			inputStruct: PresentationLayerRequest{
+				Body: StatusRequest{
+					Detailed: true,
+				},
+				Token: "statustoken",
+			},
+			expectedString: "OP|token=statustoken|operacao=status|detalhado=true|FIM\n",
+		},
+		{
+			name: "History request",
+			inputStruct: PresentationLayerRequest{
+				Body: HistoryRequest{
+					Limit: 1,
+				},
+				Token: "historytoken",
+			},
+			expectedString: "OP|token=historytoken|operacao=historico|limite=1|FIM\n",
 		},
 	}
 

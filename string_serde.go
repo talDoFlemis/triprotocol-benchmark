@@ -92,6 +92,10 @@ func (s StringSerde) getStrFieldRepresentation(field reflect.Value) string {
 		fieldValue = strings.Join(numbers, ",")
 	case time.Time:
 		fieldValue = value.Format(time.RFC3339)
+	case bool:
+		fieldValue = strconv.FormatBool(value)
+	case int:
+		fieldValue = strconv.Itoa(value)
 	default:
 		fieldValue = field.String()
 	}
