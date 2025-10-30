@@ -3,7 +3,9 @@ app:
   version: 0.1.0
   env: base
   tcp-timeout-in-seconds: 5
-  protocol-test-server-address: localhost:42069
+  string-protocol-server-address: 54.174.195.77:8080
+  json-protocol-server-address: 54.174.195.77:8081
+  protobuf-protocol-server-address: 54.174.195.77:8082
 
 http:
   port: 42069
