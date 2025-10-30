@@ -111,9 +111,14 @@ func (h *MainHandler) Auth(c echo.Context) error {
 		return err
 	}
 
+	protocolAddress, err := h.getProcotolAddress(req.Protocol)
+	if err != nil {
+		return err
+	}
+
 	appClient := NewAppLayerClient[AuthRequest, AuthResponse](serde, DefaultTCPRoundTripper, h.appSettings)
 
-	resp, err := appClient.Auth(ctx, "", &appRequest)
+	resp, err := appClient.Auth(ctx, protocolAddress, &appRequest)
 	if err != nil {
 		return err
 	}
@@ -133,6 +138,21 @@ func (h *MainHandler) getProtocolSerde(protocol string) (Serde, error) {
 		slog.Error("Error getting protocol marshaller", slog.String("protocol", protocol))
 		return nil, errors.New("protocol not supported")
 	}
+}
+
+func (h *MainHandler) getProcotolAddress(protocol string) (string, error) {
+	switch protocol {
+	case "json":
+		return h.appSettings.JSONProtocolServerAddress, nil
+	case "string":
+		return h.appSettings.StringProtocolServerAddress, nil
+	case "proto":
+		return h.appSettings.ProtobufProtocolServerAddress, nil
+	default:
+		slog.Error("Error getting protocol marshaller", slog.String("protocol", protocol))
+		return "", errors.New("protocol not supported")
+	}
+
 }
 
 func (h *MainHandler) Start() error {
