@@ -98,9 +98,10 @@ func (a AuthRequest) CommandOrOperationName() string {
 }
 
 type AuthResponse struct {
-	Token      string `json:"token"`
-	Name       string `json:"nome"`
-	Enrollment string `json:"matricula"`
+	Token      string    `json:"token"`
+	Name       string    `json:"nome"`
+	Enrollment string    `json:"matricula"`
+	Timestamp  time.Time `json:"timestamp"`
 }
 
 // OperationResponseName implements OperationResponse.
@@ -128,6 +129,7 @@ type EchoResponse struct {
 	ServerTimestamp time.Time `json:"timestamp_servidor"`
 	MessageSize     string    `json:"tamanho_mensagem"`
 	HashMD5         string    `json:"hash_md5"`
+	Timestamp       time.Time `json:"timestamp"`
 }
 
 // OperationResponseName implements OperationResponse.
@@ -176,11 +178,12 @@ func (t TimestampRequest) CommandOrOperationName() string {
 }
 
 type TimestampResponse struct {
-	FormatedTimestamp string `json:"timestamp_formatado"`
-	UnixTimestamp     string `json:"timestamp_unix"`
-	Timezone          string `json:"timezone"`
-	DayOfWeek         string `json:"dia_semana"`
-	AdditionalInfo    string `json:"informacao_adicional"`
+	FormatedTimestamp string    `json:"timestamp_formatado"`
+	UnixTimestamp     string    `json:"timestamp_unix"`
+	Timezone          string    `json:"timezone"`
+	DayOfWeek         string    `json:"dia_semana"`
+	AdditionalInfo    string    `json:"informacao_adicional"`
+	Timestamp         time.Time `json:"timestamp"`
 }
 
 // OperationResponseName implements OperationResponse.
@@ -189,7 +192,7 @@ func (t TimestampResponse) OperationResponseName() string {
 }
 
 type StatusRequest struct {
-	Detailed bool `json:"detailed"`
+	Detailed bool `json:"detalhado"`
 }
 
 // IsOperation implements OperationRequest.
@@ -199,17 +202,40 @@ func (s StatusRequest) IsOperation() bool {
 
 // CommandOrOperationName implements OperationRequest.
 func (s StatusRequest) CommandOrOperationName() string {
-	return "STATUS"
+	return "status"
 }
 
 type StatusResponse struct {
 	Status              string    `json:"status"`
 	OperationsProcessed int       `json:"operacoes_processadas"`
 	TimeActive          time.Time `json:"tempo_ativo"`
+	Version             string    `json:"versao"`
 	ActiveSessions      int       `json:"sessoes_ativas,omitempty"`
-	DatabaseStatistics  string    `json:"estatisticas_banco,omitempty"`
-	InUseMemory         string    `json:"memoria_uso,omitempty"`
-	RecentConnections   string    `json:"conexoes_recentes,omitempty"`
+	Timestamp           time.Time `json:"timestamp"`
+	DatabaseStatistics  struct {
+		TotalSessions     int `json:"total_sessoes"`
+		TotalOperations   int `json:"total_operacoes"`
+		OperationsPerType struct {
+			Authentication int `json:"autenticacao"`
+			Echo           int `json:"echo"`
+			History        int `json:"historico"`
+			Sum            int `json:"soma"`
+			Status         int `json:"status"`
+			Timestamp      int `json:"timestamp"`
+		} `json:"operacoes_por_tipo"`
+		UniqueStudents int `json:"alunos_unicos"`
+	} `json:"estatisticas_banco"`
+	SessionDetails map[string]struct {
+		TimestampLogin int    `json:"timestamp_login"`
+		IPCliente      string `json:"ip_cliente"`
+		Nome           string `json:"nome"`
+		Matricula      string `json:"matricula"`
+	} `json:"sessoes_detalhes"`
+	Metrics struct {
+		SimulatedCPU     float64 `json:"cpu_simulado"`
+		SimulatedMemory  float64 `json:"memoria_simulada"`
+		LatencySimulated float64 `json:"latencia_simulada"`
+	} `json:"metricas"`
 }
 
 // OperationResponseName implements OperationResponse.
@@ -228,22 +254,28 @@ func (h HistoryRequest) IsOperation() bool {
 
 // CommandOrOperationName implements OperationRequest.
 func (h HistoryRequest) CommandOrOperationName() string {
-	return "HISTORY"
-}
-
-type OperationRecord struct {
-	ID         string         `json:"id"`
-	Operation  string         `json:"operacao"`
-	Timestamp  time.Time      `json:"timestamp"`
-	Success    bool           `json:"sucesso"`
-	Parameters map[string]any `json:"parametros"`
-	Result     map[string]any `json:"resultado"`
+	return "historico"
 }
 
 type HistoryResponse struct {
-	Operations []OperationRecord `json:"operacoes"`
-	TotalFound int               `json:"total_encontrado"`
-	Statistics string            `json:"estatisticas"`
+	StudentID      string `json:"aluno_id"`
+	RequestedLimit int    `json:"limite_solicitado"`
+	TotalFound     int    `json:"total_encontrado"`
+	History        []struct {
+		Operation string         `json:"operacao"`
+		Params    map[string]any `json:"parametros"`
+		Resultado map[string]any `json:"resultado"`
+		Timestamp string         `json:"timestamp"`
+		Sucesso   bool           `json:"sucesso"`
+	} `json:"historico"`
+	ConsultTimestamp string `json:"timestamp_consulta"`
+	Stats            struct {
+		TotalOperations   int     `json:"total_operacoes"`
+		SuccessOperations int     `json:"operacoes_sucesso"`
+		ErroOperations    int     `json:"operacoes_erro"`
+		SuccessRate       float64 `json:"taxa_sucesso"`
+	} `json:"estatisticas"`
+	MostUsedOperations [][]interface{} `json:"operacoes_mais_usadas"`
 }
 
 // OperationResponseName implements OperationResponse.
@@ -264,8 +296,9 @@ func (l LogoutRequest) CommandOrOperationName() string {
 }
 
 type LogoutResponse struct {
-	Message         string `json:"mensagem"`
-	FinishedSession string `json:"sessao_encerrada"`
+	Message         string    `json:"mensagem"`
+	FinishedSession string    `json:"sessao_encerrada"`
+	Timestamp       time.Time `json:"timestamp"`
 }
 
 // OperationResponseName implements OperationResponse.
