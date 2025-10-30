@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/http"
 	"testing"
 	"time"
 
@@ -100,20 +101,71 @@ func TestStringDeserialization(t *testing.T) {
 	tests := []struct {
 		name           string
 		inputString    string
-		bindStruct     PresentationLayerResponse
-		expectedStruct PresentationLayerResponse
+		bindStruct     PresentationLayerResponse[OperationResponse]
+		expectedStruct PresentationLayerResponse[OperationResponse]
 	}{
 		{
 			name:        "AUTH Response",
 			inputString: "OK|token=tokenauth|nome=SAID CAVALCANTE RODRIGUES|matricula=538349|timestamp=2025-10-30T18:16:04.585339|FIM",
-			expectedStruct: PresentationLayerResponse{
-				Body: AuthResponse{
-					Token:     "tokenauth",
-					Name:      "SAID CAVALCANTE RODRIGUES",
-					Timestamp: time.Date(2025, 10, 30, 18, 16, 4, 585339, time.Local),
+			expectedStruct: PresentationLayerResponse[OperationResponse]{
+				Body: &AuthResponse{
+					Token:      "tokenauth",
+					Name:       "SAID CAVALCANTE RODRIGUES",
+					Timestamp:  time.Date(2025, 10, 30, 18, 16, 4, 585339000, time.UTC),
+					Enrollment: "538349",
 				},
+				StatusCode: http.StatusOK,
 			},
-			bindStruct: PresentationLayerResponse{},
+			bindStruct: PresentationLayerResponse[OperationResponse]{Body: &AuthResponse{}},
+		},
+		{
+			name:        "Echo Response",
+			inputString: "OK|mensagem_original=tubias|mensagem_eco=ECO: tubias|timestamp_servidor=2025-10-30T21:12:41.305529|tamanho_mensagem=6|hash_md5=929a27e9c93c793fb599ab483f3f720d|timestamp=2025-10-30T21:12:41.304798|FIM",
+			expectedStruct: PresentationLayerResponse[OperationResponse]{
+				Body: &EchoResponse{
+					OriginalMessage: "tubias",
+					ServerTimestamp: time.Date(2025, time.October, 30, 21, 12, 41, 305529000, time.UTC),
+					EchoMessage:     "ECO: tubias",
+					MessageSize:     6,
+					HashMD5:         "929a27e9c93c793fb599ab483f3f720d",
+					Timestamp:       time.Date(2025, 10, 30, 21, 12, 41, 304798000, time.UTC),
+				},
+				StatusCode: http.StatusOK,
+			},
+			bindStruct: PresentationLayerResponse[OperationResponse]{Body: &EchoResponse{}},
+		},
+		{
+			name:        "Timestamp Response",
+			inputString: "OK|timestamp_unix=1761859371.6872423|timestamp_iso=2025-10-30T21:22:51.687237|timestamp_formatado=30/10/2025 21:22:51|ano=2025|mes=10|dia=30|hora=21|minuto=22|segundo=51|microsegundo=687237|timestamp=2025-10-30T21:22:51.686268|FIM",
+			expectedStruct: PresentationLayerResponse[OperationResponse]{
+				Body: &TimestampResponse{
+					ISOTimestamp:      time.Date(2025, 10, 30, 21, 22, 51, 687237000, time.UTC),
+					UnixTimestamp:     "1761859371.6872423",
+					FormatedTimestamp: "30/10/2025 21:22:51",
+					Year:              2025,
+					Month:             10,
+					Day:               30,
+					Hour:              21,
+					Minute:            22,
+					Second:            51,
+					Microsecond:       687237,
+					Timestamp:         time.Date(2025, 10, 30, 21, 22, 51, 686268000, time.UTC),
+				},
+				StatusCode: http.StatusOK,
+			},
+			bindStruct: PresentationLayerResponse[OperationResponse]{Body: &TimestampResponse{}},
+		},
+		{
+			name:        "Logout Response",
+			inputString: "OK|msg=Logout realizado com sucesso|timestamp=2025-10-30T21:32:25.038812|FIM",
+			expectedStruct: PresentationLayerResponse[OperationResponse]{
+				Body: &LogoutResponse{
+					Message:   "Logout realizado com sucesso",
+					Timestamp: time.Date(2025, 10, 30, 21, 32, 25, 38812000, time.UTC),
+				},
+				StatusCode: http.StatusOK,
+			},
+			bindStruct: PresentationLayerResponse[OperationResponse]{Body: &LogoutResponse{}},
 		},
 	}
 
@@ -124,7 +176,9 @@ func TestStringDeserialization(t *testing.T) {
 			err := serde.Unmarshal([]byte(tt.inputString), &tt.bindStruct)
 
 			require.NoError(t, err, "Unmarshall should not return an error")
-			assert.Equal(t, tt.expectedStruct, tt.bindStruct)
+			assert.Equal(t, tt.expectedStruct.StatusCode, tt.bindStruct.StatusCode, "Status codes should match")
+			assert.Equal(t, tt.expectedStruct.Body, tt.bindStruct.Body, "Body should match")
+			assert.Nil(t, tt.bindStruct.Err, "Error should be nil")
 		})
 	}
 }

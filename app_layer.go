@@ -84,7 +84,7 @@ func (c *AppLayerClient[T, R]) Do(ctx context.Context, address string, req T, to
 
 	var resp R
 
-	err := c.internalDo(ctx, address, req, resp, token)
+	err := internalDo[T, R](ctx, address, req, resp, token, c.Presentation, c.RoundTripper)
 	if err != nil {
 		logger.ErrorContext(ctx, "Operation failed", slog.String("error", err.Error()))
 		return nil, err
@@ -108,7 +108,7 @@ func (c *AppLayerClient[T, R]) Logout(ctx context.Context, address string, req *
 
 	var resp LogoutResponse
 
-	err := c.internalDo(ctx, address, req, resp, token)
+	err := internalDo[LogoutRequest, LogoutResponse](ctx, address, *req, resp, token, c.Presentation, c.RoundTripper)
 	if err != nil {
 		logger.ErrorContext(ctx, "Logout failed", slog.String("error", err.Error()))
 		return nil, err
@@ -119,7 +119,7 @@ func (c *AppLayerClient[T, R]) Logout(ctx context.Context, address string, req *
 	return &resp, nil
 }
 
-func (c *AppLayerClient[T, R]) internalDo(ctx context.Context, address string, req OperationRequest, resp OperationResponse, token string) error {
+func internalDo[T OperationRequest, R OperationResponse](ctx context.Context, address string, req T, resp R, token string, serde Serde, roundTripper RoundTripper) error {
 	ctx, span := tracer.Start(ctx, "AppLayerClient.internalDo", trace.WithAttributes(
 		attribute.String("applayer.token", token),
 		attribute.String("transportlayer.address", address),
@@ -142,7 +142,7 @@ func (c *AppLayerClient[T, R]) internalDo(ctx context.Context, address string, r
 		presentationLayerReq.Token = token
 	}
 
-	rawRequest, err := c.Presentation.Marshal(presentationLayerReq)
+	rawRequest, err := serde.Marshal(presentationLayerReq)
 	if err != nil {
 		logger.ErrorContext(ctx, "Error serializing request", slog.String("error", err.Error()))
 		return err
@@ -150,7 +150,7 @@ func (c *AppLayerClient[T, R]) internalDo(ctx context.Context, address string, r
 
 	logger.DebugContext(ctx, "Sending request", slog.String("request", string(rawRequest)))
 
-	rawResponse, err := c.RoundTripper.RequestReply(ctx, address, rawRequest)
+	rawResponse, err := roundTripper.RequestReply(ctx, address, rawRequest)
 	if err != nil {
 		logger.ErrorContext(ctx, "Error performing request", slog.String("error", err.Error()))
 		return err
@@ -158,11 +158,11 @@ func (c *AppLayerClient[T, R]) internalDo(ctx context.Context, address string, r
 
 	logger.DebugContext(ctx, "Received response", slog.String("response", string(rawResponse)))
 
-	appLayerResp := PresentationLayerResponse{
+	appLayerResp := PresentationLayerResponse[R]{
 		Body: resp,
 	}
 
-	err = c.Presentation.Unmarshal(rawResponse, &appLayerResp)
+	err = serde.Unmarshal(rawResponse, &appLayerResp)
 	if err != nil {
 		logger.ErrorContext(ctx, "Error deserializing response", slog.String("error", err.Error()))
 		return err
@@ -170,7 +170,7 @@ func (c *AppLayerClient[T, R]) internalDo(ctx context.Context, address string, r
 
 	if appLayerResp.StatusCode >= http.StatusBadRequest {
 		logger.ErrorContext(ctx, "Operation returned error", slog.Int("status_code", appLayerResp.StatusCode))
-		return &appLayerResp.Err
+		return appLayerResp.Err
 	}
 
 	logger.InfoContext(ctx, "Operation successful")

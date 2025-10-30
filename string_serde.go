@@ -104,24 +104,6 @@ func (s StringSerde) getStrFieldRepresentation(field reflect.Value) string {
 	return fieldValue
 }
 
-func (s StringSerde) getCommandName(t reflect.Type) (string, int) {
-	// Command name defaults to struct name
-	commandName := t.Name()
-	commandIdx := -1
-
-	for i := range t.NumField() {
-		field := t.Field(i)
-
-		if field.Tag.Get(STRINGS_TAG) == "id" {
-			commandName = strings.ToUpper(field.Name)
-			commandIdx = i
-			break
-		}
-	}
-
-	return commandName, commandIdx
-}
-
 // Unmarshal implements Serde.
 func (s StringSerde) Unmarshal(data []byte, v any) error {
 	typ := reflect.TypeOf(v)
@@ -138,7 +120,7 @@ func (s StringSerde) Unmarshal(data []byte, v any) error {
 	value = value.Elem()
 	typ = reflect.TypeOf(value)
 
-	_, ok := v.(*PresentationLayerResponse)
+	_, ok := v.(*PresentationLayerResponse[OperationResponse])
 	if !ok {
 		return fmt.Errorf("expected presentatino layer response, found %v", value.Type().Kind())
 	}
@@ -194,9 +176,80 @@ func (s StringSerde) Unmarshal(data []byte, v any) error {
 		}
 
 		errField := value.FieldByName("Err")
-		errField.Set(reflect.ValueOf(err))
+		errField.Set(reflect.ValueOf(&err))
 
 		return nil
+	}
+
+	value.FieldByName("Err").Set(reflect.Zero(value.FieldByName("Err").Type()))
+
+	bodyField := value.FieldByName("Body").Elem()
+	if bodyField.Kind() != reflect.Pointer || bodyField.IsNil() {
+		return fmt.Errorf("body field is not a pointer or is nil: %v", bodyField.Kind())
+	}
+
+	bodyField = bodyField.Elem()
+	bodyType := bodyField.Type()
+
+	for i := range bodyField.NumField() {
+		field := bodyField.Field(i)
+		fieldType := bodyType.Field(i)
+		fieldTagValue := getFieldTagValue(fieldType)
+		tagValues := strings.Split(fieldTagValue, ",")
+
+		if len(tagValues) == 0 {
+			return fmt.Errorf("field %s does not have a json tag", fieldType.Name)
+		}
+
+		omitEmpty := strings.Contains(fieldTagValue, "omitempty")
+		propertyName := tagValues[0]
+
+		fieldValueStr, ok := properties[propertyName]
+		if !ok && !omitEmpty {
+			return fmt.Errorf("property %s not found", propertyName)
+		}
+
+		err := setFieldValueFromString(field, fieldValueStr)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func getFieldTagValue(field reflect.StructField) string {
+	fieldTagValue := field.Tag.Get(STRINGS_TAG)
+
+	if fieldTagValue == "" {
+		fieldTagValue = field.Tag.Get("json")
+	}
+
+	if fieldTagValue == "" {
+		fieldTagValue = field.Name
+	}
+
+	return fieldTagValue
+}
+
+func setFieldValueFromString(field reflect.Value, valueStr string) error {
+	switch field.Kind() {
+	case reflect.String:
+		field.SetString(valueStr)
+	case reflect.Int:
+		fieldValue, err := strconv.Atoi(valueStr)
+		if err != nil {
+			return err
+		}
+		field.SetInt(int64(fieldValue))
+	case reflect.TypeOf(time.Now()).Kind():
+		fieldValue, err := time.Parse("2006-01-02T15:04:05.000000", valueStr)
+		if err != nil {
+			return err
+		}
+		field.Set(reflect.ValueOf(fieldValue))
+	default:
+		return fmt.Errorf("unsupported field type %s", field.Type().Name())
 	}
 
 	return nil

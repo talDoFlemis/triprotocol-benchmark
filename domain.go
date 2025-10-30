@@ -23,9 +23,9 @@ type PresentationLayerRequest struct {
 	Body  OperationRequest
 }
 
-type PresentationLayerResponse struct {
-	Body       OperationResponse
-	Err        PresentationLayerErrorResponse
+type PresentationLayerResponse[T OperationResponse] struct {
+	Body       T
+	Err        *PresentationLayerErrorResponse
 	StatusCode int
 }
 
@@ -125,9 +125,9 @@ func (e EchoRequest) IsOperation() bool {
 
 type EchoResponse struct {
 	OriginalMessage string    `json:"mensagem_original"`
-	EchoMessage     string    `json:"mensagem_echo"`
+	EchoMessage     string    `json:"mensagem_eco"`
 	ServerTimestamp time.Time `json:"timestamp_servidor"`
-	MessageSize     string    `json:"tamanho_mensagem"`
+	MessageSize     int       `json:"tamanho_mensagem"`
 	HashMD5         string    `json:"hash_md5"`
 	Timestamp       time.Time `json:"timestamp"`
 }
@@ -179,8 +179,8 @@ func (t TimestampRequest) CommandOrOperationName() string {
 
 type TimestampResponse struct {
 	FormatedTimestamp string    `json:"timestamp_formatado"`
+	ISOTimestamp      time.Time `json:"timestamp_iso"`
 	UnixTimestamp     string    `json:"timestamp_unix"`
-	Timezone          string    `json:"timezone"`
 	Year              int       `json:"ano"`
 	Month             int       `json:"mes"`
 	Day               int       `json:"dia"`
@@ -301,9 +301,8 @@ func (l LogoutRequest) CommandOrOperationName() string {
 }
 
 type LogoutResponse struct {
-	Message         string    `json:"mensagem"`
-	FinishedSession string    `json:"sessao_encerrada"`
-	Timestamp       time.Time `json:"timestamp"`
+	Message   string    `json:"mensagem" strings:"msg"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 // OperationResponseName implements OperationResponse.
