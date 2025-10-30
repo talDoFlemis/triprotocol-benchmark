@@ -209,6 +209,10 @@ func (s StringSerde) Unmarshal(data []byte, v any) error {
 			return fmt.Errorf("property %s not found", propertyName)
 		}
 
+		if !ok && omitEmpty {
+			continue
+		}
+
 		err := setFieldValueFromString(field, fieldValueStr)
 		if err != nil {
 			return err
@@ -249,7 +253,7 @@ func setFieldValueFromString(field reflect.Value, valueStr string) error {
 		}
 		field.Set(reflect.ValueOf(fieldValue))
 	default:
-		return fmt.Errorf("unsupported field type %s", field.Type().Name())
+		return fmt.Errorf("unsupported field type %v", field.Type())
 	}
 
 	return nil
