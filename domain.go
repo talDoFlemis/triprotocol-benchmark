@@ -181,8 +181,13 @@ type TimestampResponse struct {
 	FormatedTimestamp string    `json:"timestamp_formatado"`
 	UnixTimestamp     string    `json:"timestamp_unix"`
 	Timezone          string    `json:"timezone"`
-	DayOfWeek         string    `json:"dia_semana"`
-	AdditionalInfo    string    `json:"informacao_adicional"`
+	Year              int       `json:"ano"`
+	Month             int       `json:"mes"`
+	Day               int       `json:"dia"`
+	Hour              int       `json:"hora"`
+	Minute            int       `json:"minuto"`
+	Second            int       `json:"segundo"`
+	Microsecond       int       `json:"microsegundo"`
 	Timestamp         time.Time `json:"timestamp"`
 }
 
