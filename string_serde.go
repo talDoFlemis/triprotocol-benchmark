@@ -120,12 +120,6 @@ func (s StringSerde) Unmarshal(data []byte, v any) error {
 	}
 
 	value = value.Elem()
-	typ = reflect.TypeOf(value)
-
-	_, ok := v.(*PresentationLayerResponse[OperationResponse])
-	if !ok {
-		return fmt.Errorf("expected presentatino layer response, found %v", value.Type().Kind())
-	}
 
 	dataArgs := strings.Split(string(data), "|")
 
@@ -185,18 +179,27 @@ func (s StringSerde) Unmarshal(data []byte, v any) error {
 
 	value.FieldByName("Err").Set(reflect.Zero(value.FieldByName("Err").Type()))
 
-	bodyField := value.FieldByName("Body").Elem()
-	if bodyField.Kind() != reflect.Pointer || bodyField.IsNil() {
-		return fmt.Errorf("body field is not a pointer or is nil: %v", bodyField.Kind())
+	bodyField := value.FieldByName("Body")
+
+	if bodyField.Kind() != reflect.Pointer && bodyField.Kind() != reflect.Interface {
+		return fmt.Errorf("body field is not a pointer or interface: %v", bodyField.Kind())
+	}
+
+	if bodyField.Kind() == reflect.Interface {
+		bodyField = bodyField.Elem()
+	}
+
+	if bodyField.IsNil() {
+		bodyField.Set(reflect.New(bodyField.Type().Elem()))
 	}
 
 	bodyField = bodyField.Elem()
-
 	return bindStructFields(bodyField, properties)
 }
 
 func bindStructFields(v reflect.Value, properties map[string]string) error {
 	typ := v.Type()
+	fmt.Printf("Binding struct of type %s\n", typ.Name())
 
 	for i := range v.NumField() {
 		field := v.Field(i)

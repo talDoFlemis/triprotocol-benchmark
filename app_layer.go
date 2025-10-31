@@ -39,27 +39,11 @@ func (c *AppLayerClient[T, R]) Auth(ctx context.Context, address string, req *Au
 	)
 	logger.DebugContext(ctx, "Performing auth operation")
 
-	rawRequest, err := c.Presentation.Marshal(req)
-	if err != nil {
-		logger.ErrorContext(ctx, "Error serializing request", slog.String("error", err.Error()))
-		return nil, err
-	}
-
-	logger.Debug("Sending request", slog.String("request", string(rawRequest)))
-
-	rawResponse, err := c.RoundTripper.RequestReply(ctx, address, rawRequest)
-	if err != nil {
-		logger.ErrorContext(ctx, "Error performing request", slog.String("error", err.Error()))
-		return nil, err
-	}
-
-	logger.DebugContext(ctx, "Received response", slog.String("response", string(rawResponse)))
-
 	var authResponse AuthResponse
 
-	err = c.Presentation.Unmarshal(rawResponse, &authResponse)
+	err := internalDo(ctx, address, req, &authResponse, "", c.Presentation, c.RoundTripper)
 	if err != nil {
-		logger.ErrorContext(ctx, "Error deserializing response", slog.String("error", err.Error()))
+		logger.ErrorContext(ctx, "Auth failed", slog.String("error", err.Error()))
 		return nil, err
 	}
 
@@ -68,7 +52,7 @@ func (c *AppLayerClient[T, R]) Auth(ctx context.Context, address string, req *Au
 	return &authResponse, nil
 }
 
-func (c *AppLayerClient[T, R]) Do(ctx context.Context, address string, req T, token string) (*R, error) {
+func (c *AppLayerClient[T, R]) Do(ctx context.Context, address string, req T, resp R, token string) error {
 	ctx, span := tracer.Start(ctx, "AppLayerClient.Do", trace.WithAttributes(
 		attribute.String("applayer.token", token),
 		attribute.String("transportlayer.address", address),
@@ -82,15 +66,13 @@ func (c *AppLayerClient[T, R]) Do(ctx context.Context, address string, req T, to
 		slog.String("address", address),
 	)
 
-	var resp R
-
 	err := internalDo(ctx, address, req, resp, token, c.Presentation, c.RoundTripper)
 	if err != nil {
 		logger.ErrorContext(ctx, "Operation failed", slog.String("error", err.Error()))
-		return nil, err
+		return err
 	}
 
-	return &resp, nil
+	return nil
 }
 
 func (c *AppLayerClient[T, R]) Logout(ctx context.Context, address string, req *LogoutRequest, token string) (*LogoutResponse, error) {
@@ -108,7 +90,7 @@ func (c *AppLayerClient[T, R]) Logout(ctx context.Context, address string, req *
 
 	var resp LogoutResponse
 
-	err := internalDo(ctx, address, *req, resp, token, c.Presentation, c.RoundTripper)
+	err := internalDo(ctx, address, *req, &resp, token, c.Presentation, c.RoundTripper)
 	if err != nil {
 		logger.ErrorContext(ctx, "Logout failed", slog.String("error", err.Error()))
 		return nil, err

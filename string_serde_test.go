@@ -213,6 +213,15 @@ func TestStringDeserialization(t *testing.T) {
 			bindStruct: PresentationLayerResponse[OperationResponse]{Body: &StatusResponse{}},
 		},
 		{
+			name:        "History Response",
+			inputString: "OK|aluno_id=538349|limite_solicitado=1|total_encontrado=1|historico={'operacao': 'status', 'parametros': {'detalhado': True}, 'resultado': {'status': 'ATIVO', 'timestamp_consulta': '2025-10-31T01:14:19.431377', 'operacoes_processadas': 69, 'sessoes_ativas': 1, 'tempo_ativo': 1761873259.4313905, 'versao': '1.0.0', 'estatisticas_banco': {'total_sessoes': 31, 'total_operacoes': 104, 'operacoes_por_tipo': {'autenticacao': 36, 'echo': 15, 'historico': 17, 'soma': 14, 'status': 12, 'timestamp': 10}, 'alunos_unicos': 2}, 'sessoes_detalhes': {'538349': {'timestamp_login': 1761873259, 'ip_cliente': '191.6.14.5', 'nome': 'SAID CAVALCANTE RODRIGUES', 'matricula': '538349'}}, 'metricas': {'cpu_simulado': 22.68, 'memoria_simulada': 59.08, 'latencia_simulada': 4.28}}, 'timestamp': '2025-10-31T01:14:19.432029', 'sucesso': True}|timestamp_consulta=2025-10-31T01:14:19.616416|estatisticas={'total_operacoes': 1, 'operacoes_sucesso': 1, 'operacoes_erro': 0, 'taxa_sucesso': 100.0}|operacoes_mais_usadas=('status', 1)|timestamp=2025-10-31T01:14:19.615292|FIM",
+			expectedStruct: PresentationLayerResponse[OperationResponse]{
+				Body:       &HistoryResponse{},
+				StatusCode: http.StatusOK,
+			},
+			bindStruct: PresentationLayerResponse[OperationResponse]{Body: &HistoryResponse{}},
+		},
+		{
 			name:        "Logout Response",
 			inputString: "OK|msg=Logout realizado com sucesso|timestamp=2025-10-30T21:32:25.038812|FIM",
 			expectedStruct: PresentationLayerResponse[OperationResponse]{

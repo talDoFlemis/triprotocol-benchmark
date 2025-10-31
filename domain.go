@@ -270,25 +270,29 @@ func (h HistoryRequest) CommandOrOperationName() string {
 	return "historico"
 }
 
+type HistoryResponseStats struct {
+	TotalOperations   int     `json:"total_operacoes"`
+	SuccessOperations int     `json:"operacoes_sucesso"`
+	ErroOperations    int     `json:"operacoes_erro"`
+	SuccessRate       float64 `json:"taxa_sucesso"`
+}
+
+type HistoryOperationHistoryResponse struct {
+	Operation string         `json:"operacao"`
+	Params    map[string]any `json:"parametros"`
+	Resultado map[string]any `json:"resultado"`
+	Timestamp string         `json:"timestamp"`
+	Sucesso   bool           `json:"sucesso"`
+}
+
 type HistoryResponse struct {
-	StudentID      string `json:"aluno_id"`
-	RequestedLimit int    `json:"limite_solicitado"`
-	TotalFound     int    `json:"total_encontrado"`
-	History        []struct {
-		Operation string         `json:"operacao"`
-		Params    map[string]any `json:"parametros"`
-		Resultado map[string]any `json:"resultado"`
-		Timestamp string         `json:"timestamp"`
-		Sucesso   bool           `json:"sucesso"`
-	} `json:"historico"`
-	ConsultTimestamp string `json:"timestamp_consulta"`
-	Stats            struct {
-		TotalOperations   int     `json:"total_operacoes"`
-		SuccessOperations int     `json:"operacoes_sucesso"`
-		ErroOperations    int     `json:"operacoes_erro"`
-		SuccessRate       float64 `json:"taxa_sucesso"`
-	} `json:"estatisticas"`
-	MostUsedOperations [][]interface{} `json:"operacoes_mais_usadas"`
+	StudentID          string                            `json:"aluno_id"`
+	RequestedLimit     int                               `json:"limite_solicitado"`
+	TotalFound         int                               `json:"total_encontrado"`
+	History            []HistoryOperationHistoryResponse `json:"historico"`
+	ConsultTimestamp   string                            `json:"timestamp_consulta"`
+	Stats              HistoryResponseStats              `json:"estatisticas"`
+	MostUsedOperations [][]any                           `json:"operacoes_mais_usadas"`
 }
 
 // OperationResponseName implements OperationResponse.
