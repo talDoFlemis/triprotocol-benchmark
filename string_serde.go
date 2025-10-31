@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -189,11 +191,16 @@ func (s StringSerde) Unmarshal(data []byte, v any) error {
 	}
 
 	bodyField = bodyField.Elem()
-	bodyType := bodyField.Type()
 
-	for i := range bodyField.NumField() {
-		field := bodyField.Field(i)
-		fieldType := bodyType.Field(i)
+	return bindStructFields(bodyField, properties)
+}
+
+func bindStructFields(v reflect.Value, properties map[string]string) error {
+	typ := v.Type()
+
+	for i := range v.NumField() {
+		field := v.Field(i)
+		fieldType := typ.Field(i)
 		fieldTagValue := getFieldTagValue(fieldType)
 		tagValues := strings.Split(fieldTagValue, ",")
 
@@ -238,6 +245,13 @@ func getFieldTagValue(field reflect.StructField) string {
 
 func setFieldValueFromString(field reflect.Value, valueStr string) error {
 	switch field.Kind() {
+	case reflect.Pointer:
+		if field.IsNil() {
+			field.Set(reflect.New(field.Type().Elem()))
+		}
+
+		field = field.Elem()
+		return setFieldValueFromString(field, valueStr)
 	case reflect.String:
 		field.SetString(valueStr)
 	case reflect.Int:
@@ -246,15 +260,110 @@ func setFieldValueFromString(field reflect.Value, valueStr string) error {
 			return err
 		}
 		field.SetInt(int64(fieldValue))
-	case reflect.TypeOf(time.Now()).Kind():
-		fieldValue, err := time.Parse("2006-01-02T15:04:05.000000", valueStr)
+	case reflect.Float64:
+		fieldValue, err := strconv.ParseFloat(valueStr, 64)
 		if err != nil {
 			return err
 		}
-		field.Set(reflect.ValueOf(fieldValue))
+		field.SetFloat(fieldValue)
+	case reflect.Bool:
+		fieldValue, err := strconv.ParseBool(valueStr)
+		if err != nil {
+			return err
+		}
+		field.SetBool(fieldValue)
+	case reflect.Map:
+		mapType := field.Type()
+
+		keyType := mapType.Key()
+		if keyType.Kind() != reflect.String {
+			return fmt.Errorf("existing map key is not string, got %s", keyType.Kind())
+		}
+
+		valueType := mapType.Elem()
+
+		mapProperties, err := generateMapStrinStringFromValueStr(valueStr)
+		if err != nil {
+			return err
+		}
+
+		newMapType := reflect.MapOf(reflect.TypeOf(""), valueType)
+		newMap := reflect.MakeMap(newMapType)
+
+		for key, strValue := range mapProperties {
+			newValue := reflect.New(valueType)
+			err = setFieldValueFromString(newValue, strValue)
+			if err != nil {
+				return err
+			}
+
+			newKey := reflect.ValueOf(key)
+			newMap.SetMapIndex(newKey, newValue.Elem())
+		}
+
+		field.Set(newMap)
+
+	case reflect.Struct:
+		if field.Type() == reflect.TypeOf(time.Time{}) {
+			fieldValue, err := time.Parse("2006-01-02T15:04:05.000000", valueStr)
+			if err != nil {
+				return err
+			}
+			field.Set(reflect.ValueOf(fieldValue))
+			return nil
+		}
+
+		// Fallback to python dict parsing, first level only
+		// Second level we use recursion, as second map will be a string
+		mapProperties, err := generateMapStrinStringFromValueStr(valueStr)
+		if err != nil {
+			return err
+		}
+
+		err = bindStructFields(field, mapProperties)
+		if err != nil {
+			return err
+		}
+
 	default:
 		return fmt.Errorf("unsupported field type %v", field.Type())
 	}
 
 	return nil
+}
+
+func generateMapStrinStringFromValueStr(stringValue string) (map[string]string, error) {
+	properties := make(map[string]any)
+	jsonStr := convertPythonDictTOJSONDict(stringValue)
+
+	err := json.Unmarshal([]byte(jsonStr), &properties)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshaling struct field from string: %w", err)
+	}
+
+	mapProperties := make(map[string]string)
+	for key, value := range properties {
+		switch v := value.(type) {
+		case map[string]any:
+			buf, err := json.Marshal(v)
+			if err != nil {
+				return nil, fmt.Errorf("error marshaling map field to string: %w", err)
+			}
+			mapProperties[key] = string(buf)
+		default:
+			mapProperties[key] = fmt.Sprintf("%v", v)
+		}
+	}
+
+	return mapProperties, nil
+}
+
+func convertPythonDictTOJSONDict(dictStr string) string {
+	// Replace single quotes with double quotes
+	str := regexp.MustCompile(`'`).ReplaceAllString(dictStr, `"`)
+	// Replace Python boolean literals with JSON boolean literals
+	str = regexp.MustCompile(`False`).ReplaceAllString(str, `false`)
+	str = regexp.MustCompile(`True`).ReplaceAllString(str, `true`)
+
+	return str
 }
