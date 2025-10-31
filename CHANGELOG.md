@@ -1,3 +1,17 @@
+## [1.7.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.6.0...v1.7.0) (2025-10-31)
+
+### Features
+
+* add better nil pointer handling ([fac7c81](https://github.com/talDoFlemis/triprotocol-benchmark/commit/fac7c81c8d7979e2ea0fa53f9c3f099373631f7d))
+* add map parsing, optional fields and struct parsing ([2f68b2e](https://github.com/talDoFlemis/triprotocol-benchmark/commit/2f68b2eb326bc6cb539d1e55bbaebdd7d446bebf))
+* add string serde testes ([d2db7ce](https://github.com/talDoFlemis/triprotocol-benchmark/commit/d2db7ce8dab5e68eb90ed844ae79dd1591d9faa0))
+* add strings request ([f24b483](https://github.com/talDoFlemis/triprotocol-benchmark/commit/f24b483bb4611c1e9ba3ff65a20bf83d87825d6b))
+
+### Bug Fixes
+
+* bug on parsing long numbers as float ([bdefa3b](https://github.com/talDoFlemis/triprotocol-benchmark/commit/bdefa3ba6f905998dbed1819703af5bc2dffb15b))
+* **string_serde:** skip omitempty ([5db490d](https://github.com/talDoFlemis/triprotocol-benchmark/commit/5db490d25367da21d464594f962f5980bd7ef395))
+
 ## [1.6.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.5.0...v1.6.0) (2025-10-30)
 
 ### Features
