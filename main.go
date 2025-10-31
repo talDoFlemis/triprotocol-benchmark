@@ -65,5 +65,4 @@ func main() {
 
 	slog.InfoContext(ctx, "App stopped gracefully")
 	retcode = 0
-
 }

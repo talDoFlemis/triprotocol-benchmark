@@ -46,7 +46,7 @@ token = match.group(1)
 do_operation("echo", token, mensagem="ola mundo")
 do_operation("soma", token, numeros=[1, 2, 3])
 do_operation("timestamp", token)
-do_operation("status", token, detalhado=False)
+do_operation("status", token, detalhado=True)
 do_operation("historico", token, limite=10)
 
 logout_request = f"LOGOUT|token={token}|FIM"

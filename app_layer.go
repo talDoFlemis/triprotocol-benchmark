@@ -84,7 +84,7 @@ func (c *AppLayerClient[T, R]) Do(ctx context.Context, address string, req T, to
 
 	var resp R
 
-	err := internalDo[T, R](ctx, address, req, resp, token, c.Presentation, c.RoundTripper)
+	err := internalDo(ctx, address, req, resp, token, c.Presentation, c.RoundTripper)
 	if err != nil {
 		logger.ErrorContext(ctx, "Operation failed", slog.String("error", err.Error()))
 		return nil, err
@@ -108,7 +108,7 @@ func (c *AppLayerClient[T, R]) Logout(ctx context.Context, address string, req *
 
 	var resp LogoutResponse
 
-	err := internalDo[LogoutRequest, LogoutResponse](ctx, address, *req, resp, token, c.Presentation, c.RoundTripper)
+	err := internalDo(ctx, address, *req, resp, token, c.Presentation, c.RoundTripper)
 	if err != nil {
 		logger.ErrorContext(ctx, "Logout failed", slog.String("error", err.Error()))
 		return nil, err

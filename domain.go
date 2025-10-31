@@ -210,37 +210,45 @@ func (s StatusRequest) CommandOrOperationName() string {
 	return "status"
 }
 
+type StatusResponseMetrics struct {
+	SimulatedCPU     float64 `json:"cpu_simulado"`
+	SimulatedMemory  float64 `json:"memoria_simulada"`
+	LatencySimulated float64 `json:"latencia_simulada"`
+}
+
+type StatusResponseSessionDetails struct {
+	TimestampLogin string `json:"timestamp_login"`
+	IPClient       string `json:"ip_cliente"`
+	Name           string `json:"nome"`
+	Enrollment     string `json:"matricula"`
+}
+
+type StatusDatabaseOperationType struct {
+	Authentication int `json:"autenticacao"`
+	Echo           int `json:"echo"`
+	History        int `json:"historico"`
+	Sum            int `json:"soma"`
+	Status         int `json:"status"`
+	Timestamp      int `json:"timestamp"`
+}
+
+type StatusDatabaseStatistics struct {
+	TotalSessions     int                         `json:"total_sessoes"`
+	TotalOperations   int                         `json:"total_operacoes"`
+	OperationsPerType StatusDatabaseOperationType `json:"operacoes_por_tipo"`
+	UniqueStudents    int                         `json:"alunos_unicos"`
+}
+
 type StatusResponse struct {
-	Status              string    `json:"status"`
-	OperationsProcessed int       `json:"operacoes_processadas"`
-	TimeActive          time.Time `json:"tempo_ativo"`
-	Version             string    `json:"versao"`
-	ActiveSessions      int       `json:"sessoes_ativas,omitempty"`
-	Timestamp           time.Time `json:"timestamp"`
-	DatabaseStatistics  struct {
-		TotalSessions     int `json:"total_sessoes"`
-		TotalOperations   int `json:"total_operacoes"`
-		OperationsPerType struct {
-			Authentication int `json:"autenticacao"`
-			Echo           int `json:"echo"`
-			History        int `json:"historico"`
-			Sum            int `json:"soma"`
-			Status         int `json:"status"`
-			Timestamp      int `json:"timestamp"`
-		} `json:"operacoes_por_tipo"`
-		UniqueStudents int `json:"alunos_unicos"`
-	} `json:"estatisticas_banco"`
-	SessionDetails map[string]struct {
-		TimestampLogin int    `json:"timestamp_login"`
-		IPCliente      string `json:"ip_cliente"`
-		Nome           string `json:"nome"`
-		Matricula      string `json:"matricula"`
-	} `json:"sessoes_detalhes"`
-	Metrics struct {
-		SimulatedCPU     float64 `json:"cpu_simulado"`
-		SimulatedMemory  float64 `json:"memoria_simulada"`
-		LatencySimulated float64 `json:"latencia_simulada"`
-	} `json:"metricas"`
+	Status              string                                   `json:"status"`
+	OperationsProcessed int                                      `json:"operacoes_processadas"`
+	TimeActive          string                                   `json:"tempo_ativo"`
+	Version             string                                   `json:"versao"`
+	ActiveSessions      int                                      `json:"sessoes_ativas,omitempty"`
+	Timestamp           time.Time                                `json:"timestamp"`
+	DatabaseStatistics  *StatusDatabaseStatistics                `json:"estatisticas_banco,omitempty"`
+	SessionDetails      *map[string]StatusResponseSessionDetails `json:"sessoes_detalhes,omitempty"`
+	Metrics             StatusResponseMetrics                    `json:"metricas"`
 }
 
 // OperationResponseName implements OperationResponse.

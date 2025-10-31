@@ -336,7 +336,9 @@ func generateMapStrinStringFromValueStr(stringValue string) (map[string]string, 
 	properties := make(map[string]any)
 	jsonStr := convertPythonDictTOJSONDict(stringValue)
 
-	err := json.Unmarshal([]byte(jsonStr), &properties)
+	d := json.NewDecoder(strings.NewReader(jsonStr))
+	d.UseNumber()
+	err := d.Decode(&properties)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshaling struct field from string: %w", err)
 	}
