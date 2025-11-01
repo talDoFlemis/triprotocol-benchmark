@@ -62,6 +62,9 @@ func (s StringSerde) Marshal(v any) ([]byte, error) {
 	}
 
 	value = reflect.ValueOf(r.Body)
+	if value.Kind() == reflect.Pointer {
+		value = value.Elem()
+	}
 	t = value.Type()
 
 	for i := range value.NumField() {
