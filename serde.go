@@ -99,12 +99,12 @@ func copyStruct(src, dst any) error {
 	dstVal := reflect.ValueOf(dst)
 
 	// Ensure destination is a settable pointer to a struct
-	if dstVal.Kind() != reflect.Ptr || dstVal.Elem().Kind() != reflect.Struct {
+	if dstVal.Kind() != reflect.Pointer || dstVal.Elem().Kind() != reflect.Struct {
 		return fmt.Errorf("destination must be a pointer to a struct")
 	}
 
 	// Ensure source is a struct or a pointer to a struct
-	if srcVal.Kind() == reflect.Ptr {
+	if srcVal.Kind() == reflect.Pointer {
 		srcVal = srcVal.Elem()
 	}
 	if srcVal.Kind() != reflect.Struct {

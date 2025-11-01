@@ -38,30 +38,33 @@ type OperationResponse interface {
 	OperationResponseName() string
 }
 
-type ISO8601Time struct {
+type NonISO8601Time struct {
 	time.Time
 }
 
+var (
+	_ json.Marshaler   = (*NonISO8601Time)(nil)
+	_ json.Unmarshaler = (*NonISO8601Time)(nil)
+)
+
 // MarshalJSON implements the json.Marshaler interface for ISO8601Time.
-func (t ISO8601Time) MarshalJSON() ([]byte, error) {
-	// Format the time as an ISO 8601 string (RFC3339 is a common ISO 8601 variant).
-	// time.RFC3339 provides "YYYY-MM-DDTHH:MM:SSZ" or "YYYY-MM-DDTHH:MM:SS-ZZ:ZZ" format.
+func (t NonISO8601Time) MarshalJSON() ([]byte, error) {
 	s := t.Format(time.RFC3339)
 	return json.Marshal(s)
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface for ISO8601Time.
-func (t *ISO8601Time) UnmarshalJSON(data []byte) error {
+func (t *NonISO8601Time) UnmarshalJSON(data []byte) error {
 	var s string
 	if err := json.Unmarshal(data, &s); err != nil {
 		return err
 	}
-	// Parse the ISO 8601 string back into a time.Time.
-	parsedTime, err := time.Parse(time.RFC3339, s)
+
+	parsedTime, err := time.Parse("2006-01-02T15:04:05.000000", s)
 	if err != nil {
 		return err
 	}
-	*t = ISO8601Time{parsedTime}
+	*t = NonISO8601Time{parsedTime}
 	return nil
 }
 
@@ -99,12 +102,12 @@ func (a AuthRequest) CommandOrOperationName() string {
 
 type AuthResponse struct {
 	Token       string `json:"token"`
-	Name        string `json:"nome"`
-	Enrollment  string `json:"matricula"`
+	Name        string `strings:"nome"`
+	Enrollment  string `strings:"matricula"`
 	StudentData *struct {
 		Name string `json:"nome"`
 	} `json:"dados_aluno,omitempty"`
-	Timestamp time.Time `json:"timestamp"`
+	Timestamp NonISO8601Time `json:"timestamp"`
 }
 
 // OperationResponseName implements OperationResponse.
@@ -127,12 +130,12 @@ func (e EchoRequest) IsOperation() bool {
 }
 
 type EchoResponse struct {
-	OriginalMessage string    `json:"mensagem_original"`
-	EchoMessage     string    `json:"mensagem_eco"`
-	ServerTimestamp time.Time `json:"timestamp_servidor"`
-	MessageSize     int       `json:"tamanho_mensagem"`
-	HashMD5         string    `json:"hash_md5"`
-	Timestamp       time.Time `json:"timestamp"`
+	OriginalMessage string         `json:"mensagem_original"`
+	EchoMessage     string         `json:"mensagem_eco"`
+	ServerTimestamp NonISO8601Time `json:"timestamp_servidor"`
+	MessageSize     int            `json:"tamanho_mensagem"`
+	HashMD5         string         `json:"hash_md5"`
+	Timestamp       NonISO8601Time `json:"timestamp"`
 }
 
 // OperationResponseName implements OperationResponse.
@@ -181,17 +184,17 @@ func (t TimestampRequest) CommandOrOperationName() string {
 }
 
 type TimestampResponse struct {
-	FormatedTimestamp string    `json:"timestamp_formatado"`
-	ISOTimestamp      time.Time `json:"timestamp_iso"`
-	UnixTimestamp     string    `json:"timestamp_unix"`
-	Year              int       `json:"ano"`
-	Month             int       `json:"mes"`
-	Day               int       `json:"dia"`
-	Hour              int       `json:"hora"`
-	Minute            int       `json:"minuto"`
-	Second            int       `json:"segundo"`
-	Microsecond       int       `json:"microsegundo"`
-	Timestamp         time.Time `json:"timestamp"`
+	FormatedTimestamp string         `json:"timestamp_formatado"`
+	ISOTimestamp      NonISO8601Time `json:"timestamp_iso"`
+	UnixTimestamp     string         `json:"timestamp_unix"`
+	Year              int            `json:"ano"`
+	Month             int            `json:"mes"`
+	Day               int            `json:"dia"`
+	Hour              int            `json:"hora"`
+	Minute            int            `json:"minuto"`
+	Second            int            `json:"segundo"`
+	Microsecond       int            `json:"microsegundo"`
+	Timestamp         NonISO8601Time `json:"timestamp"`
 }
 
 // OperationResponseName implements OperationResponse.
@@ -248,7 +251,7 @@ type StatusResponse struct {
 	TimeActive          string                                   `json:"tempo_ativo"`
 	Version             string                                   `json:"versao"`
 	ActiveSessions      int                                      `json:"sessoes_ativas,omitempty"`
-	Timestamp           time.Time                                `json:"timestamp"`
+	Timestamp           NonISO8601Time                           `json:"timestamp"`
 	DatabaseStatistics  *StatusDatabaseStatistics                `json:"estatisticas_banco,omitempty"`
 	SessionDetails      *map[string]StatusResponseSessionDetails `json:"sessoes_detalhes,omitempty"`
 	Metrics             StatusResponseMetrics                    `json:"metricas"`
@@ -284,7 +287,7 @@ type HistoryOperationHistoryResponse struct {
 	Operation string         `json:"operacao"`
 	Params    map[string]any `json:"parametros"`
 	Result    map[string]any `json:"resultado"`
-	Timestamp time.Time      `json:"timestamp"`
+	Timestamp NonISO8601Time `json:"timestamp"`
 	Success   bool           `json:"sucesso"`
 }
 
@@ -293,10 +296,10 @@ type HistoryResponse struct {
 	RequestedLimit     int                               `json:"limite_solicitado"`
 	TotalFound         int                               `json:"total_encontrado"`
 	History            []HistoryOperationHistoryResponse `json:"historico"`
-	ConsultTimestamp   time.Time                         `json:"timestamp_consulta"`
+	ConsultTimestamp   NonISO8601Time                    `json:"timestamp_consulta"`
 	Stats              HistoryResponseStats              `json:"estatisticas"`
 	MostUsedOperations [][]any                           `json:"operacoes_mais_usadas"`
-	Timestamp          time.Time                         `json:"timestamp"`
+	Timestamp          NonISO8601Time                    `json:"timestamp"`
 }
 
 // OperationResponseName implements OperationResponse.
@@ -317,8 +320,8 @@ func (l LogoutRequest) CommandOrOperationName() string {
 }
 
 type LogoutResponse struct {
-	Message   string    `json:"mensagem" strings:"msg"`
-	Timestamp time.Time `json:"timestamp"`
+	Message   string         `json:"mensagem" strings:"msg"`
+	Timestamp NonISO8601Time `json:"timestamp"`
 }
 
 // OperationResponseName implements OperationResponse.

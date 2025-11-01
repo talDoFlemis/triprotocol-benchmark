@@ -357,12 +357,12 @@ func setFieldValueFromString(field reflect.Value, valueStr string) error {
 		field.Set(newMap)
 
 	case reflect.Struct:
-		if field.Type() == reflect.TypeOf(time.Time{}) {
+		if field.Type() == reflect.TypeOf(NonISO8601Time{}) {
 			fieldValue, err := time.Parse("2006-01-02T15:04:05.000000", valueStr)
 			if err != nil {
 				return err
 			}
-			field.Set(reflect.ValueOf(fieldValue))
+			field.Set(reflect.ValueOf(NonISO8601Time{fieldValue}))
 			return nil
 		}
 
