@@ -13,9 +13,15 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
+)
+
+const (
+	minWidth  = 80
+	minHeight = 30
 )
 
 // Color palette
@@ -194,6 +200,12 @@ type model struct {
 	settings *Settings
 	width    int
 	height   int
+
+	// viewport
+	ready           bool
+	viewport        viewport.Model
+	leftPanelWidth  int
+	rightPanelWidth int
 }
 
 const defaultEnrollmentID = "538349"
@@ -243,6 +255,23 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		m.help.Width = msg.Width
+
+		m.leftPanelWidth = msg.Width / 2
+		m.rightPanelWidth = msg.Width - m.leftPanelWidth - 3
+
+		headerHeight := lipgloss.Height(m.headerView())
+		footerHeight := lipgloss.Height(m.footerView())
+		verticalMarginHeight := headerHeight + footerHeight
+
+		if !m.ready {
+			m.viewport = viewport.New(m.rightPanelWidth-10, minHeight-verticalMarginHeight)
+			m.viewport.YPosition = headerHeight
+			m.viewport.SetContent("")
+			m.ready = true
+		} else {
+			m.viewport.Width = m.rightPanelWidth - 10
+			m.viewport.Height = msg.Height - verticalMarginHeight
+		}
 		return m, nil
 
 	case tea.KeyMsg:
@@ -334,6 +363,19 @@ func (m *model) updateFocus() {
 	case focusParams:
 		m.paramsInput.Focus()
 	}
+}
+
+func (m model) headerView() string {
+	localTitleStyle := titleStyle.Width(m.rightPanelWidth)
+	title := localTitleStyle.Render("╔═ Response ═╗")
+	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(title)))
+	return lipgloss.JoinHorizontal(lipgloss.Center, title, line)
+}
+
+func (m model) footerView() string {
+	info := hintStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
+	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(info)))
+	return lipgloss.JoinHorizontal(lipgloss.Center, line, info)
 }
 
 func (m model) validate() error {
@@ -535,12 +577,18 @@ func formatResponse(title string, data interface{}) string {
 }
 
 func (m model) View() string {
-	if m.width < 80 {
-		return "Terminal too small. Please resize."
+	if m.width < minWidth || m.height < minHeight {
+		return lipgloss.Place(
+			m.width,
+			m.height,
+			lipgloss.Center,
+			lipgloss.Center,
+			fmt.Sprintf("Terminal too small. Please resize. Minimum size: %dx%d, found %dx%d", minWidth, minHeight, m.width, m.height),
+		)
 	}
 
 	// Use fixed content dimensions
-	contentWidth := 160
+	contentWidth := minWidth
 	contentHeight := 80
 	if m.height > contentHeight {
 		contentHeight = m.height - 10
@@ -695,11 +743,6 @@ func (m model) renderLeftPanel(width int) string {
 }
 
 func (m model) renderRightPanel(width int) string {
-	// Apply width to styles
-	localTitleStyle := titleStyle.Width(width)
-
-	title := localTitleStyle.Render("╔═ Response ═╗")
-
 	var content string
 	if m.loading {
 		progressBar := m.progress.ViewAs(0.5) // Simple animated progress
@@ -739,11 +782,14 @@ func (m model) renderRightPanel(width int) string {
 		)
 	}
 
+	m.viewport.SetContent(content)
+
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
-		title,
+		m.headerView(),
 		"",
-		content,
+		m.viewport.View(),
+		m.footerView(),
 	)
 }
 
