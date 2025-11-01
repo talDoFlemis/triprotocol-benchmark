@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"log/slog"
 	"net"
@@ -63,7 +64,9 @@ func (t *TCPRoundTripper) RequestReply(ctx context.Context, address string, req 
 		return nil, err
 	}
 
+	trimmedData := bytes.TrimRight(buf, "\x00")
+
 	slog.DebugContext(ctx, "Received response from TCP server", slog.String("address", address))
 
-	return buf, nil
+	return trimmedData, nil
 }
