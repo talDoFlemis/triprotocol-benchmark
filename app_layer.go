@@ -41,7 +41,7 @@ func (c *AppLayerClient[T, R]) Auth(ctx context.Context, address string, req *Au
 
 	var authResponse AuthResponse
 
-	err := internalDo(ctx, address, req, &authResponse, "", c.Presentation, c.RoundTripper)
+	err := internalDo(ctx, address, *req, &authResponse, "", c.Presentation, c.RoundTripper)
 	if err != nil {
 		logger.ErrorContext(ctx, "Auth failed", slog.String("error", err.Error()))
 		return nil, err
