@@ -1,3 +1,25 @@
+## [1.8.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.7.0...v1.8.0) (2025-11-01)
+
+### Features
+
+* add json requests script ([76137be](https://github.com/talDoFlemis/triprotocol-benchmark/commit/76137be32c4849e6a4a935b1474e8752332bc4e5))
+* add json serde with string serialization ([4ed9456](https://github.com/talDoFlemis/triprotocol-benchmark/commit/4ed94563bf6167d0a14c884edf7a6002ef6387a0))
+* add unix timestamp handling ([6ad848b](https://github.com/talDoFlemis/triprotocol-benchmark/commit/6ad848bd8b251c1e149d1c127a47eef205270d14))
+* add unmarshall to json serde ([5d7539b](https://github.com/talDoFlemis/triprotocol-benchmark/commit/5d7539b03470bfca990da00499e5aba3516e2f42))
+* **domain:** add student data to auth response for json ([3369cc5](https://github.com/talDoFlemis/triprotocol-benchmark/commit/3369cc545f8a5ec2990db40ac8660f8d24730551))
+
+### Bug Fixes
+
+* **string_serde:** use getFieldTagValue on marshalling ([ef90038](https://github.com/talDoFlemis/triprotocol-benchmark/commit/ef900381b8a0049416552b021a44ed3bff792a6b))
+
+### Code Refactoring
+
+* **domain:** change types and tags ([b2cfe54](https://github.com/talDoFlemis/triprotocol-benchmark/commit/b2cfe54c67093a1e1236e03341441c54ee911ee5))
+* **domain:** make number sum list different captalization ([4062792](https://github.com/talDoFlemis/triprotocol-benchmark/commit/4062792a68f9895727408ed374b88ee69b86f8eb))
+* **string_request:** add slice operations ([c8c81b4](https://github.com/talDoFlemis/triprotocol-benchmark/commit/c8c81b44617d3db920c1555c5bd45934fcdd8a50))
+* **sum_response:** use float for values ([755bce0](https://github.com/talDoFlemis/triprotocol-benchmark/commit/755bce0bd92499f8bc792c930d563ff3eee49bf0))
+* use non std time.Time ([65a7ea7](https://github.com/talDoFlemis/triprotocol-benchmark/commit/65a7ea7682833f0679139c68a0476a2092b614cf))
+
 ## [1.7.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.6.0...v1.7.0) (2025-10-31)
 
 ### Features
