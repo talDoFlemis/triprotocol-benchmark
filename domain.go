@@ -138,7 +138,7 @@ func (e EchoResponse) OperationResponseName() string {
 }
 
 type SumRequest struct {
-	Numbers []int `json:"numeros" validate:"required,min=1,max=1000"`
+	Numbers []int `json:"nums" validate:"required,min=1,max=1000"`
 }
 
 // IsOperation implements OperationRequest.
@@ -280,9 +280,9 @@ type HistoryResponseStats struct {
 type HistoryOperationHistoryResponse struct {
 	Operation string         `json:"operacao"`
 	Params    map[string]any `json:"parametros"`
-	Resultado map[string]any `json:"resultado"`
-	Timestamp string         `json:"timestamp"`
-	Sucesso   bool           `json:"sucesso"`
+	Result    map[string]any `json:"resultado"`
+	Timestamp time.Time      `json:"timestamp"`
+	Success   bool           `json:"sucesso"`
 }
 
 type HistoryResponse struct {
@@ -290,9 +290,10 @@ type HistoryResponse struct {
 	RequestedLimit     int                               `json:"limite_solicitado"`
 	TotalFound         int                               `json:"total_encontrado"`
 	History            []HistoryOperationHistoryResponse `json:"historico"`
-	ConsultTimestamp   string                            `json:"timestamp_consulta"`
+	ConsultTimestamp   time.Time                         `json:"timestamp_consulta"`
 	Stats              HistoryResponseStats              `json:"estatisticas"`
 	MostUsedOperations [][]any                           `json:"operacoes_mais_usadas"`
+	Timestamp          time.Time                         `json:"timestamp"`
 }
 
 // OperationResponseName implements OperationResponse.
