@@ -316,7 +316,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.operationIdx++
 				}
 			}
-
 		case key.Matches(msg, m.keys.Enter):
 			if m.focusIndex == focusSubmit {
 				if err := m.validate(); err != nil {
@@ -328,6 +327,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.loading = true
 				return m, m.executeOperation()
 			}
+		case key.Matches(msg, m.keys.Down):
+			m.viewport.ScrollDown(1)
+			return m, nil
+
+		case key.Matches(msg, m.keys.Up):
+			m.viewport.ScrollUp(1)
+			return m, nil
 		}
 
 	case operationResultMsg:
