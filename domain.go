@@ -138,7 +138,7 @@ func (e EchoResponse) OperationResponseName() string {
 }
 
 type SumRequest struct {
-	Numbers []int `json:"nums" validate:"required,min=1,max=1000"`
+	Numbers []int `json:"numeros" strings:"nums" validate:"required,min=1,max=1000"`
 }
 
 // IsOperation implements OperationRequest.
