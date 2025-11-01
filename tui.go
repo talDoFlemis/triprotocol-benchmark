@@ -11,8 +11,10 @@ import (
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -105,24 +107,24 @@ type keyMap struct {
 }
 
 func (k keyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Tab, k.Left, k.Right, k.Enter, k.Quit}
+	return []key.Binding{k.Tab, k.Left, k.Right, k.Up, k.Down, k.Enter, k.Quit}
 }
 
 func (k keyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Tab, k.ShiftTab},
+		{k.Tab, k.ShiftTab, k.Up, k.Down},
 		{k.Left, k.Right, k.Enter, k.Quit},
 	}
 }
 
 var keys = keyMap{
 	Up: key.NewBinding(
-		key.WithKeys("up"),
-		key.WithHelp("↑", "not used"),
+		key.WithKeys("up", "k"),
+		key.WithHelp("↑/k", "scroll up"),
 	),
 	Down: key.NewBinding(
-		key.WithKeys("down"),
-		key.WithHelp("↓", "not used"),
+		key.WithKeys("down", "j"),
+		key.WithHelp("↓/j", "scroll down"),
 	),
 	Left: key.NewBinding(
 		key.WithKeys("left", "h"),
@@ -176,8 +178,9 @@ type model struct {
 	paramsInput  textinput.Model
 
 	// Components
-	help help.Model
-	keys keyMap
+	help     help.Model
+	keys     keyMap
+	progress progress.Model
 
 	// State
 	focusIndex   focusField
@@ -193,18 +196,23 @@ type model struct {
 	height   int
 }
 
+const defaultEnrollmentID = "538349"
+
 func initialModel(settings *Settings) model {
 	enrollment := textinput.New()
 	enrollment.Placeholder = "Enter enrollment ID"
 	enrollment.CharLimit = 50
 	enrollment.PromptStyle = inputStyle
 	enrollment.TextStyle = inputStyle
+	enrollment.SetValue(defaultEnrollmentID)
 
 	paramsInput := textinput.New()
 	paramsInput.Placeholder = "Enter parameters (JSON or comma-separated)"
 	paramsInput.CharLimit = 200
 	paramsInput.PromptStyle = inputStyle
 	paramsInput.TextStyle = inputStyle
+
+	prog := progress.New(progress.WithDefaultGradient())
 
 	return model{
 		protocolIdx:  0,
@@ -215,6 +223,7 @@ func initialModel(settings *Settings) model {
 		paramsInput:  paramsInput,
 		help:         help.New(),
 		keys:         keys,
+		progress:     prog,
 		focusIndex:   focusProtocol,
 		settings:     settings,
 		width:        80,
@@ -688,37 +697,45 @@ func (m model) renderLeftPanel(width int) string {
 func (m model) renderRightPanel(width int) string {
 	// Apply width to styles
 	localTitleStyle := titleStyle.Width(width)
-	localContentStyle := contentStyle.Width(width)
 
 	title := localTitleStyle.Render("╔═ Response ═╗")
 
 	var content string
 	if m.loading {
-		content = localContentStyle.Render("⏳ Loading...")
+		progressBar := m.progress.ViewAs(0.5) // Simple animated progress
+		content = lipgloss.JoinVertical(
+			lipgloss.Left,
+			"⏳ Processing request...",
+			"",
+			progressBar,
+		)
 	} else if m.result != "" {
-		// Wrap result to fit panel
-		var lines []string
-		for _, line := range strings.Split(m.result, "\n") {
-			if len(line) <= width {
-				lines = append(lines, localContentStyle.Render(line))
+		// Use glamour to render the result as markdown
+		r, err := glamour.NewTermRenderer(
+			glamour.WithAutoStyle(),
+			glamour.WithWordWrap(width-4),
+		)
+
+		if err == nil {
+			// Wrap JSON in markdown code block
+			markdown := "```json\n" + m.result + "\n```"
+			rendered, err := r.Render(markdown)
+			if err == nil {
+				content = rendered
 			} else {
-				// Wrap long lines
-				for len(line) > width {
-					lines = append(lines, localContentStyle.Render(line[:width]))
-					line = line[width:]
-				}
-				if len(line) > 0 {
-					lines = append(lines, localContentStyle.Render(line))
-				}
+				// Fallback to plain text if glamour fails
+				content = m.result
 			}
+		} else {
+			// Fallback to plain text if glamour fails
+			content = m.result
 		}
-		content = lipgloss.JoinVertical(lipgloss.Left, lines...)
 	} else {
 		content = lipgloss.JoinVertical(
 			lipgloss.Left,
-			localContentStyle.Render("No results yet."),
-			localContentStyle.Render("Fill in the form and"),
-			localContentStyle.Render("submit a request."),
+			"No results yet.",
+			"Fill in the form and",
+			"submit a request.",
 		)
 	}
 
@@ -820,7 +837,11 @@ func RunTUI() error {
 
 	defer f.Close()
 
-	p := tea.NewProgram(initialModel(settings), tea.WithAltScreen())
+	p := tea.NewProgram(
+		initialModel(settings),
+		tea.WithAltScreen(),
+		tea.WithMouseCellMotion(),
+	)
 	_, err = p.Run()
 	return err
 }

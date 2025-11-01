@@ -4,16 +4,16 @@ import "github.com/charmbracelet/lipgloss"
 
 // Theme defines the color scheme for the TUI
 type Theme struct {
-	Primary       lipgloss.Color
-	Secondary     lipgloss.Color
-	Text          lipgloss.Color
-	Muted         lipgloss.Color
-	Border        lipgloss.Color
-	Error         lipgloss.Color
-	Background    lipgloss.Color
-	Focused       lipgloss.Color
-	ButtonActive  lipgloss.Color
-	ButtonBg      lipgloss.Color
+	Primary      lipgloss.Color
+	Secondary    lipgloss.Color
+	Text         lipgloss.Color
+	Muted        lipgloss.Color
+	Border       lipgloss.Color
+	Error        lipgloss.Color
+	Background   lipgloss.Color
+	Focused      lipgloss.Color
+	ButtonActive lipgloss.Color
+	ButtonBg     lipgloss.Color
 }
 
 // DefaultTheme returns the default color scheme
