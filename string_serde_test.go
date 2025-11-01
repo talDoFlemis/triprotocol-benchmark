@@ -9,9 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// SOMA quebrado, diz que numeros nao eh uma lista
-// Historico quebrado, faltando informacao na stream
-
 func TestStringSerialization(t *testing.T) {
 	tests := []struct {
 		name           string

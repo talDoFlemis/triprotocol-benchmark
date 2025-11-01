@@ -66,7 +66,8 @@ func (s StringSerde) Marshal(v any) ([]byte, error) {
 
 	for i := range value.NumField() {
 		field := value.Field(i)
-		fieldTagValue := t.Field(i).Tag.Get("json")
+		fieldType := t.Field(i)
+		fieldTagValue := getFieldTagValue(fieldType)
 
 		fieldValue := s.getStrFieldRepresentation(field)
 
