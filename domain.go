@@ -98,10 +98,13 @@ func (a AuthRequest) CommandOrOperationName() string {
 }
 
 type AuthResponse struct {
-	Token      string    `json:"token"`
-	Name       string    `json:"nome"`
-	Enrollment string    `json:"matricula"`
-	Timestamp  time.Time `json:"timestamp"`
+	Token       string `json:"token"`
+	Name        string `json:"nome"`
+	Enrollment  string `json:"matricula"`
+	StudentData *struct {
+		Name string `json:"nome"`
+	} `json:"dados_aluno,omitempty"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 // OperationResponseName implements OperationResponse.
