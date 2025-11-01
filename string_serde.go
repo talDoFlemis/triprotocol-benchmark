@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const stringsTag = "strings"
+
 type (
 	StringSerde struct{}
 )
@@ -149,18 +151,6 @@ func (s StringSerde) Unmarshal(data []byte, v any) error {
 	}
 
 	properties := make(map[string]string)
-
-	for _, arg := range dataArgs {
-		split := strings.Split(arg, "=")
-		if len(split) != 2 {
-			return fmt.Errorf("expected 2 args after spliting argument, found %d", len(split))
-		}
-
-		property := split[0]
-		value := split[1]
-		properties[property] = value
-	}
-
 	statusField := value.FieldByName("StatusCode")
 	statusField.SetInt(int64(statusCode))
 
@@ -175,6 +165,16 @@ func (s StringSerde) Unmarshal(data []byte, v any) error {
 		errField.Set(reflect.ValueOf(&err))
 
 		return nil
+	}
+
+	for _, arg := range dataArgs {
+		split := strings.Split(arg, "=")
+		if len(split) != 2 {
+			return fmt.Errorf("expected 2 args after spliting argument, found %d", len(split))
+		}
+
+		property, strValue := split[0], split[1]
+		properties[property] = strValue
 	}
 
 	value.FieldByName("Err").Set(reflect.Zero(value.FieldByName("Err").Type()))
@@ -199,7 +199,6 @@ func (s StringSerde) Unmarshal(data []byte, v any) error {
 
 func bindStructFields(v reflect.Value, properties map[string]string) error {
 	typ := v.Type()
-	fmt.Printf("Binding struct of type %s\n", typ.Name())
 
 	for i := range v.NumField() {
 		field := v.Field(i)
@@ -233,7 +232,7 @@ func bindStructFields(v reflect.Value, properties map[string]string) error {
 }
 
 func getFieldTagValue(field reflect.StructField) string {
-	fieldTagValue := field.Tag.Get(STRINGS_TAG)
+	fieldTagValue := field.Tag.Get(stringsTag)
 
 	if fieldTagValue == "" {
 		fieldTagValue = field.Tag.Get("json")
@@ -275,6 +274,56 @@ func setFieldValueFromString(field reflect.Value, valueStr string) error {
 			return err
 		}
 		field.SetBool(fieldValue)
+	case reflect.Slice:
+		// Convert string to slice representation
+		valueStr = "[" + valueStr + "]"
+		elementType := field.Type().Elem()
+		newSlice := reflect.MakeSlice(field.Type(), 0, 0)
+
+		bindSlice := []any{}
+		jsonStr := convertPythonDictTOJSONDict(valueStr)
+
+		d := json.NewDecoder(strings.NewReader(jsonStr))
+		err := d.Decode(&bindSlice)
+		if err != nil {
+			return fmt.Errorf("error unmarshaling bindSlice from string: %w", err)
+		}
+
+		for _, item := range bindSlice {
+			itemValueStr := ""
+			switch v := item.(type) {
+			case map[string]any, []any:
+				buf, err := json.Marshal(v)
+				if err != nil {
+					return fmt.Errorf("error marshaling map field to string: %w", err)
+				}
+				itemValueStr = string(buf)
+			default:
+				itemValueStr = fmt.Sprintf("%v", v)
+			}
+
+			var newItem reflect.Value
+			if elementType.Kind() == reflect.Pointer {
+				// Element type is a pointer, create a new pointer and set its value
+				newItem = reflect.New(elementType.Elem())
+				err = setFieldValueFromString(newItem.Elem(), itemValueStr)
+				if err != nil {
+					return err
+				}
+			} else {
+				// Element type is a value, create a new value
+				newItem = reflect.New(elementType).Elem()
+				err = setFieldValueFromString(newItem, itemValueStr)
+				if err != nil {
+					return err
+				}
+			}
+
+			newSlice = reflect.Append(newSlice, newItem)
+		}
+
+		field.Set(newSlice)
+
 	case reflect.Map:
 		mapType := field.Type()
 
@@ -327,6 +376,55 @@ func setFieldValueFromString(field reflect.Value, valueStr string) error {
 		if err != nil {
 			return err
 		}
+	case reflect.Interface:
+		var bindAny any
+
+		jsonStr := convertPythonDictTOJSONDict(valueStr)
+		// Check if the jsonStr is an integer
+		if regexp.MustCompile(`^[-+]?\d+$`).MatchString(jsonStr) {
+			integer, err := strconv.Atoi(jsonStr)
+			if err != nil {
+				return fmt.Errorf("error converting string to integer: %w", err)
+			}
+
+			field.Set(reflect.ValueOf(integer))
+			return nil
+		}
+
+		// Check if float
+		if regexp.MustCompile(`^[-+]?\d*\.\d+$`).MatchString(jsonStr) {
+			floatValue, err := strconv.ParseFloat(jsonStr, 64)
+			if err != nil {
+				return fmt.Errorf("error converting string to float: %w", err)
+			}
+
+			field.Set(reflect.ValueOf(floatValue))
+			return nil
+		}
+
+		// Check if boolean
+		if jsonStr == "true" || jsonStr == "false" {
+			boolValue, err := strconv.ParseBool(jsonStr)
+			if err != nil {
+				return fmt.Errorf("error converting string to boolean: %w", err)
+			}
+
+			field.Set(reflect.ValueOf(boolValue))
+			return nil
+		}
+
+		if !strings.Contains(jsonStr, "{") && !strings.Contains(jsonStr, "[") {
+			field.Set(reflect.ValueOf(valueStr))
+			return nil
+		}
+
+		d := json.NewDecoder(strings.NewReader(jsonStr))
+		err := d.Decode(&bindAny)
+		if err != nil {
+			return fmt.Errorf("error unmarshaling bindAny from string: %w", err)
+		}
+
+		field.Set(reflect.ValueOf(bindAny))
 
 	default:
 		return fmt.Errorf("unsupported field type %v", field.Type())
@@ -369,6 +467,9 @@ func convertPythonDictTOJSONDict(dictStr string) string {
 	// Replace Python boolean literals with JSON boolean literals
 	str = regexp.MustCompile(`False`).ReplaceAllString(str, `false`)
 	str = regexp.MustCompile(`True`).ReplaceAllString(str, `true`)
+	// Replace tuple shit
+	str = regexp.MustCompile(`\(`).ReplaceAllString(str, "[")
+	str = regexp.MustCompile(`\)`).ReplaceAllString(str, "]")
 
 	return str
 }

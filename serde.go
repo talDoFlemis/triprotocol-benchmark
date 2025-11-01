@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -10,8 +9,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const STRINGS_TAG = "strings"
-
 type Serde interface {
 	Marshal(v any) ([]byte, error)
 	Unmarshal(data []byte, v any) error
@@ -19,7 +16,6 @@ type Serde interface {
 
 var (
 	strserde   = StringSerde{}
-	jsonserde  = JSONSerde{}
 	protoserde = ProtobufSerde{}
 )
 
@@ -35,19 +31,8 @@ type (
 )
 
 type (
-	JSONSerde     struct{}
 	ProtobufSerde struct{}
 )
-
-// Marshal implements Serde.
-func (j JSONSerde) Marshal(v any) ([]byte, error) {
-	return json.Marshal(v)
-}
-
-// Unmarshal implements Serde.
-func (j JSONSerde) Unmarshal(data []byte, v any) error {
-	return json.Unmarshal(data, v)
-}
 
 // Marshal implements Serde.
 func (p ProtobufSerde) Marshal(v any) ([]byte, error) {

@@ -54,7 +54,7 @@ func TestStringSerialization(t *testing.T) {
 				},
 				Token: "sumtoken",
 			},
-			expectedString: "OP|token=sumtoken|operacao=soma|numeros=1,2,3|FIM\n",
+			expectedString: "OP|token=sumtoken|operacao=soma|nums=1,2,3|FIM\n",
 		},
 		{
 			name: "Timestamp request",
@@ -199,7 +199,6 @@ func TestStringDeserialization(t *testing.T) {
 							Enrollment:     "538349",
 						},
 					},
-					// {'total_sessoes': 30, 'total_operacoes': 98, 'operacoes_por_tipo': {'autenticacao': 35, 'echo': 14, 'historico': 16, 'soma': 13, 'status': 11, 'timestamp': 9}, 'alunos_unicos': 2}
 					DatabaseStatistics: &StatusDatabaseStatistics{
 						TotalSessions:     30,
 						TotalOperations:   98,
@@ -214,9 +213,79 @@ func TestStringDeserialization(t *testing.T) {
 		},
 		{
 			name:        "History Response",
-			inputString: "OK|aluno_id=538349|limite_solicitado=1|total_encontrado=1|historico={'operacao': 'status', 'parametros': {'detalhado': True}, 'resultado': {'status': 'ATIVO', 'timestamp_consulta': '2025-10-31T01:14:19.431377', 'operacoes_processadas': 69, 'sessoes_ativas': 1, 'tempo_ativo': 1761873259.4313905, 'versao': '1.0.0', 'estatisticas_banco': {'total_sessoes': 31, 'total_operacoes': 104, 'operacoes_por_tipo': {'autenticacao': 36, 'echo': 15, 'historico': 17, 'soma': 14, 'status': 12, 'timestamp': 10}, 'alunos_unicos': 2}, 'sessoes_detalhes': {'538349': {'timestamp_login': 1761873259, 'ip_cliente': '191.6.14.5', 'nome': 'SAID CAVALCANTE RODRIGUES', 'matricula': '538349'}}, 'metricas': {'cpu_simulado': 22.68, 'memoria_simulada': 59.08, 'latencia_simulada': 4.28}}, 'timestamp': '2025-10-31T01:14:19.432029', 'sucesso': True}|timestamp_consulta=2025-10-31T01:14:19.616416|estatisticas={'total_operacoes': 1, 'operacoes_sucesso': 1, 'operacoes_erro': 0, 'taxa_sucesso': 100.0}|operacoes_mais_usadas=('status', 1)|timestamp=2025-10-31T01:14:19.615292|FIM",
+			inputString: "OK|aluno_id=538349|limite_solicitado=2|total_encontrado=2|historico={'operacao': 'status', 'parametros': {'detalhado': True}, 'resultado': {'status': 'ATIVO', 'timestamp_consulta': '2025-10-31T16:48:31.155271', 'operacoes_processadas': 113, 'sessoes_ativas': 1, 'tempo_ativo': 1761929311.155286, 'versao': '1.0.0', 'estatisticas_banco': {'total_sessoes': 35, 'total_operacoes': 152, 'operacoes_por_tipo': {'autenticacao': 40, 'echo': 39, 'historico': 21, 'soma': 22, 'status': 16, 'timestamp': 14}, 'alunos_unicos': 2}, 'sessoes_detalhes': {'538349': {'timestamp_login': 1761929311, 'ip_cliente': '191.6.14.5', 'nome': 'SAID CAVALCANTE RODRIGUES', 'matricula': '538349'}}, 'metricas': {'cpu_simulado': 59.03, 'memoria_simulada': 33.28, 'latencia_simulada': 9.73}}, 'timestamp': '2025-10-31T16:48:31.156806', 'sucesso': True},{'operacao': 'timestamp', 'parametros': {}, 'resultado': {'timestamp_unix': 1761929310.9852066, 'timestamp_iso': '2025-10-31T16:48:30.985204', 'timestamp_formatado': '31/10/2025 16:48:30', 'ano': 2025, 'mes': 10, 'dia': 31, 'hora': 16, 'minuto': 48, 'segundo': 30, 'microsegundo': 985204}, 'timestamp': '2025-10-31T16:48:30.985333', 'sucesso': True}|timestamp_consulta=2025-10-31T01:14:19.616416|estatisticas={'total_operacoes': 1, 'operacoes_sucesso': 1, 'operacoes_erro': 0, 'taxa_sucesso': 100.0}|operacoes_mais_usadas=('status', 1)|timestamp=2025-10-31T01:14:19.615292|FIM",
 			expectedStruct: PresentationLayerResponse[OperationResponse]{
-				Body:       &HistoryResponse{},
+				Body: &HistoryResponse{
+					StudentID:      "538349",
+					RequestedLimit: 2,
+					TotalFound:     2,
+					History: []HistoryOperationHistoryResponse{
+						{
+							Operation: "status",
+							Params: map[string]any{
+								"detalhado": true,
+							},
+							Result: map[string]any{
+								"status":                "ATIVO",
+								"timestamp_consulta":    "2025-10-31T16:48:31.155271",
+								"operacoes_processadas": 113,
+								"sessoes_ativas":        1,
+								"tempo_ativo":           1.761929311155286e+09,
+								"versao":                "1.0.0",
+								"estatisticas_banco": map[string]any{
+									"total_sessoes":   float64(35),
+									"total_operacoes": float64(152),
+									"operacoes_por_tipo": map[string]any{
+										"autenticacao": float64(40),
+										"echo":         float64(39),
+										"historico":    float64(21),
+										"soma":         float64(22),
+										"status":       float64(16),
+										"timestamp":    float64(14),
+									},
+									"alunos_unicos": float64(2),
+								},
+								"sessoes_detalhes": map[string]any{"538349": map[string]any{"timestamp_login": 1.761929311e+09, "ip_cliente": "191.6.14.5", "nome": "SAID CAVALCANTE RODRIGUES", "matricula": "538349"}},
+								"metricas":         map[string]any{"cpu_simulado": 59.03, "memoria_simulada": 33.28, "latencia_simulada": 9.73},
+							},
+							Timestamp: time.Date(2025, 10, 31, 16, 48, 31, 156806000, time.UTC),
+							Success:   true,
+						},
+						{
+							Operation: "timestamp",
+							Params:    map[string]any{},
+							Result: map[string]any{
+								"timestamp_unix":      1761929310.9852066,
+								"timestamp_iso":       "2025-10-31T16:48:30.985204",
+								"timestamp_formatado": "31/10/2025 16:48:30",
+								"ano":                 2025,
+								"mes":                 10,
+								"dia":                 31,
+								"hora":                16,
+								"minuto":              48,
+								"segundo":             30,
+								"microsegundo":        985204,
+							},
+							Timestamp: time.Date(2025, 10, 31, 16, 48, 30, 985333000, time.UTC),
+							Success:   true,
+						},
+					},
+					MostUsedOperations: [][]any{
+						{
+							[]any{
+								"status", 1.0,
+							},
+						},
+					},
+					Timestamp:        time.Date(2025, 10, 31, 01, 14, 19, 615292000, time.UTC),
+					ConsultTimestamp: time.Date(2025, 10, 31, 01, 14, 19, 616416000, time.UTC),
+					Stats: HistoryResponseStats{
+						SuccessRate:       100,
+						SuccessOperations: 1,
+						TotalOperations:   1,
+						ErroOperations:    0,
+					},
+				},
 				StatusCode: http.StatusOK,
 			},
 			bindStruct: PresentationLayerResponse[OperationResponse]{Body: &HistoryResponse{}},
