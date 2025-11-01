@@ -68,6 +68,38 @@ func (t *NonISO8601Time) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type UnixTimestamp struct {
+	time.Time
+}
+
+var (
+	_ json.Marshaler   = (*UnixTimestamp)(nil)
+	_ json.Unmarshaler = (*UnixTimestamp)(nil)
+)
+
+// MarshalJSON implements the json.Marshaler interface for UnixTimestamp.
+func (t UnixTimestamp) MarshalJSON() ([]byte, error) {
+	// Convert time.Time to unix timestamp with nanoseconds precision as a float
+	seconds := t.Unix()
+	nanos := t.Nanosecond()
+	floatTimestamp := float64(seconds) + float64(nanos)/1e9
+	return json.Marshal(floatTimestamp)
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface for UnixTimestamp.
+func (t *UnixTimestamp) UnmarshalJSON(data []byte) error {
+	var floatValue float64
+	if err := json.Unmarshal(data, &floatValue); err != nil {
+		return err
+	}
+
+	// Convert unix timestamp to time.Time
+	seconds := int64(floatValue)
+	nanos := int64((floatValue - float64(seconds)) * 1e9)
+	*t = UnixTimestamp{time.Unix(seconds, nanos).UTC()}
+	return nil
+}
+
 var (
 	_ OperationRequest  = (*AuthRequest)(nil)
 	_ OperationResponse = (*AuthResponse)(nil)
@@ -185,7 +217,7 @@ func (t TimestampRequest) CommandOrOperationName() string {
 type TimestampResponse struct {
 	FormatedTimestamp string         `json:"timestamp_formatado"`
 	ISOTimestamp      NonISO8601Time `json:"timestamp_iso"`
-	UnixTimestamp     string         `json:"timestamp_unix"`
+	UnixTimestamp     UnixTimestamp  `json:"timestamp_unix"`
 	Year              int            `json:"ano"`
 	Month             int            `json:"mes"`
 	Day               int            `json:"dia"`
@@ -222,10 +254,10 @@ type StatusResponseMetrics struct {
 }
 
 type StatusResponseSessionDetails struct {
-	TimestampLogin string `json:"timestamp_login"`
-	IPClient       string `json:"ip_cliente"`
-	Name           string `json:"nome"`
-	Enrollment     string `json:"matricula"`
+	TimestampLogin UnixTimestamp `json:"timestamp_login"`
+	IPClient       string        `json:"ip_cliente"`
+	Name           string        `json:"nome"`
+	Enrollment     string        `json:"matricula"`
 }
 
 type StatusDatabaseOperationType struct {
@@ -247,7 +279,7 @@ type StatusDatabaseStatistics struct {
 type StatusResponse struct {
 	Status              string                                   `json:"status"`
 	OperationsProcessed int                                      `json:"operacoes_processadas"`
-	TimeActive          string                                   `json:"tempo_ativo"`
+	TimeActive          UnixTimestamp                            `json:"tempo_ativo"`
 	Version             string                                   `json:"versao"`
 	ActiveSessions      int                                      `json:"sessoes_ativas,omitempty"`
 	Timestamp           NonISO8601Time                           `json:"timestamp"`

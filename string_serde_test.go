@@ -155,7 +155,7 @@ func TestStringDeserialization(t *testing.T) {
 			expectedStruct: PresentationLayerResponse[OperationResponse]{
 				Body: &TimestampResponse{
 					ISOTimestamp:      NonISO8601Time{time.Date(2025, 10, 30, 21, 22, 51, 687237000, time.UTC)},
-					UnixTimestamp:     "1761859371.6872423",
+					UnixTimestamp:     UnixTimestamp{time.Date(2025, 10, 30, 21, 22, 51, 687242269, time.UTC)},
 					FormatedTimestamp: "30/10/2025 21:22:51",
 					Year:              2025,
 					Month:             10,
@@ -178,7 +178,7 @@ func TestStringDeserialization(t *testing.T) {
 					Status:              "ATIVO",
 					OperationsProcessed: 33,
 					ActiveSessions:      1,
-					TimeActive:          "1761860620.5855508",
+					TimeActive:          UnixTimestamp{time.Date(2025, 10, 30, 21, 43, 40, 585550785, time.UTC)},
 					Version:             "1.0.0",
 					Metrics: StatusResponseMetrics{
 						SimulatedCPU:     34.94,
@@ -199,7 +199,7 @@ func TestStringDeserialization(t *testing.T) {
 					Status:              "ATIVO",
 					OperationsProcessed: 64,
 					ActiveSessions:      1,
-					TimeActive:          "1761869051.4706569",
+					TimeActive:          UnixTimestamp{time.Date(2025, 10, 31, 00, 04, 11, 470656871, time.UTC)},
 					Version:             "1.0.0",
 					Metrics: StatusResponseMetrics{
 						SimulatedCPU:     73.87,
@@ -208,7 +208,7 @@ func TestStringDeserialization(t *testing.T) {
 					},
 					SessionDetails: &map[string]StatusResponseSessionDetails{
 						"538349": {
-							TimestampLogin: "1761869051",
+							TimestampLogin: UnixTimestamp{time.Date(2025, 10, 31, 00, 04, 11, 0, time.UTC)},
 							IPClient:       "191.6.14.5",
 							Name:           "SAID CAVALCANTE RODRIGUES",
 							Enrollment:     "538349",

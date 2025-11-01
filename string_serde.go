@@ -96,6 +96,12 @@ func (s StringSerde) getStrFieldRepresentation(field reflect.Value) string {
 			numbers = append(numbers, strconv.Itoa(number))
 		}
 		fieldValue = strings.Join(numbers, ",")
+	case UnixTimestamp:
+		// Convert time.Time to unix timestamp with microseconds precision
+		seconds := value.Unix()
+		nanos := value.Nanosecond()
+		floatTimestamp := float64(seconds) + float64(nanos)/1e9
+		fieldValue = strconv.FormatFloat(floatTimestamp, 'f', -1, 64)
 	case time.Time:
 		fieldValue = value.Format(time.RFC3339)
 	case bool:
@@ -363,6 +369,20 @@ func setFieldValueFromString(field reflect.Value, valueStr string) error {
 				return err
 			}
 			field.Set(reflect.ValueOf(NonISO8601Time{fieldValue}))
+			return nil
+		}
+
+		if field.Type() == reflect.TypeOf(UnixTimestamp{}) {
+			// Parse the unix timestamp as a float
+			floatValue, err := strconv.ParseFloat(valueStr, 64)
+			if err != nil {
+				return fmt.Errorf("error parsing unix timestamp: %w", err)
+			}
+			// Convert to seconds and nanoseconds
+			seconds := int64(floatValue)
+			nanos := int64((floatValue - float64(seconds)) * 1e9)
+			fieldValue := time.Unix(seconds, nanos).UTC()
+			field.Set(reflect.ValueOf(UnixTimestamp{fieldValue}))
 			return nil
 		}
 
