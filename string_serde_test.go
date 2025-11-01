@@ -116,6 +116,24 @@ func TestStringDeserialization(t *testing.T) {
 			bindStruct: PresentationLayerResponse[OperationResponse]{Body: &AuthResponse{}},
 		},
 		{
+			name:        "SUM Response",
+			inputString: "OK|numeros_originais=1.0,2.0,3.0|quantidade=3|soma=6.0|media=2.0|maximo=3.0|minimo=1.0|timestamp_calculo=2025-11-01T16:04:55.257055|timestamp=2025-11-01T16:04:55.256385|FIM",
+			expectedStruct: PresentationLayerResponse[OperationResponse]{
+				Body: &SumResponse{
+					OriginalNumbers:      []float64{1, 2, 3},
+					Amount:               3,
+					Sum:                  6,
+					Mean:                 2,
+					Maximum:              3,
+					Minimum:              1,
+					CalculationTimestamp: NonISO8601Time{time.Date(2025, 11, 1, 16, 4, 55, 257055000, time.UTC)},
+					Timestamp:            NonISO8601Time{time.Date(2025, 11, 1, 16, 4, 55, 256385000, time.UTC)},
+				},
+				StatusCode: http.StatusOK,
+			},
+			bindStruct: PresentationLayerResponse[OperationResponse]{Body: &SumResponse{}},
+		},
+		{
 			name:        "Echo Response",
 			inputString: "OK|mensagem_original=tubias|mensagem_eco=ECO: tubias|timestamp_servidor=2025-10-30T21:12:41.305529|tamanho_mensagem=6|hash_md5=929a27e9c93c793fb599ab483f3f720d|timestamp=2025-10-30T21:12:41.304798|FIM",
 			expectedStruct: PresentationLayerResponse[OperationResponse]{

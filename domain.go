@@ -101,13 +101,10 @@ func (a AuthRequest) CommandOrOperationName() string {
 }
 
 type AuthResponse struct {
-	Token       string `json:"token"`
-	Name        string `strings:"nome"`
-	Enrollment  string `strings:"matricula"`
-	StudentData *struct {
-		Name string `json:"nome"`
-	} `json:"dados_aluno,omitempty"`
-	Timestamp NonISO8601Time `json:"timestamp"`
+	Token      string         `json:"token"`
+	Name       string         `strings:"nome"`
+	Enrollment string         `strings:"matricula"`
+	Timestamp  NonISO8601Time `json:"timestamp"`
 }
 
 // OperationResponseName implements OperationResponse.
@@ -158,12 +155,14 @@ func (s SumRequest) CommandOrOperationName() string {
 }
 
 type SumResponse struct {
-	NumbersProcessed []int   `json:"numeros_processados"`
-	Sum              int     `json:"soma"`
-	Mean             float64 `json:"media"`
-	Maximum          float64 `json:"maximo"`
-	Minimum          float64 `json:"minimo"`
-	Amount           float64 `json:"quantidade"`
+	OriginalNumbers      []float64      `json:"numeros_originais"`
+	Sum                  float64        `json:"soma"`
+	Mean                 float64        `json:"media"`
+	Maximum              float64        `json:"maximo"`
+	Minimum              float64        `json:"minimo"`
+	Amount               float64        `json:"quantidade"`
+	Timestamp            NonISO8601Time `json:"timestamp"`
+	CalculationTimestamp NonISO8601Time `json:"timestamp_calculo"`
 }
 
 // OperationResponseName implements OperationResponse.
