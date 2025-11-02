@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
@@ -955,6 +956,12 @@ func RunTUI() error {
 	}
 
 	defer f.Close()
+	logger := slog.New(slog.NewJSONHandler(f, &slog.HandlerOptions{
+		AddSource: true,
+		Level:     slog.LevelDebug,
+	}))
+
+	slog.SetDefault(logger)
 
 	p := tea.NewProgram(
 		initialModel(settings),
