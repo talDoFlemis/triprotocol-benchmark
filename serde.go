@@ -1,12 +1,8 @@
 package main
 
 import (
-	"errors"
 	"fmt"
-	"log/slog"
 	"reflect"
-
-	"google.golang.org/protobuf/proto"
 )
 
 type Serde interface {
@@ -14,10 +10,7 @@ type Serde interface {
 	Unmarshal(data []byte, v any) error
 }
 
-var (
-	strserde   = StringSerde{}
-	protoserde = ProtobufSerde{}
-)
+var strserde = StringSerde{}
 
 var (
 	_ Serde = (*StringSerde)(nil)
@@ -29,70 +22,6 @@ type (
 	SerdeMarshall  = func(v any) ([]byte, error)
 	SerdeUnmarshal = func(data []byte, v any) error
 )
-
-type (
-	ProtobufSerde struct{}
-)
-
-// Marshal implements Serde.
-func (p ProtobufSerde) Marshal(v any) ([]byte, error) {
-	msg, err := fromDomainToProto(v)
-	if err != nil {
-		slog.Error("Error converting domain to proto", slog.String("error", err.Error()))
-		return nil, err
-	}
-
-	return proto.Marshal(msg)
-}
-
-// Unmarshal implements Serde.
-func (p ProtobufSerde) Unmarshal(data []byte, v any) error {
-	var msg proto.Message
-
-	switch v.(type) {
-	case *AuthRequest:
-		msg = nil
-	default:
-		slog.Error("Error matching type into proto", slog.String("error", "invalid type"))
-		return errors.New("invalid type")
-	}
-
-	err := proto.Unmarshal(data, msg)
-	if err != nil {
-		slog.Error("Error unmarshaling proto", slog.String("error", err.Error()))
-		return err
-	}
-
-	domain, err := fromProtoToDomain(msg)
-	if err != nil {
-		slog.Error("Error converting", slog.String("error", err.Error()))
-		return err
-	}
-
-	return copyStruct(domain, v)
-}
-
-func fromDomainToProto(v any) (proto.Message, error) {
-	var msg proto.Message
-
-	switch v.(type) {
-	default:
-		return nil, errors.New("invalid type from domain to proto")
-	}
-
-	return msg, nil
-}
-
-func fromProtoToDomain(msg proto.Message) (any, error) {
-	var domain any
-
-	switch msg.(type) {
-	default:
-		return nil, errors.New("invalid type from proto to domain")
-	}
-
-	return domain, nil
-}
 
 func copyStruct(src, dst any) error {
 	srcVal := reflect.ValueOf(src)
