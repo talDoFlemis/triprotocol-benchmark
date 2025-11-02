@@ -32,3 +32,7 @@ go.work.sum
 # .vscode/
 tmp
 debug.log
+
+Taskfile.yml
+.git
+.github
