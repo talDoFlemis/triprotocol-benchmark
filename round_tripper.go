@@ -6,7 +6,11 @@ import (
 	"log/slog"
 	"net"
 	"time"
+
+	"go.opentelemetry.io/otel"
 )
+
+var tracer = otel.Tracer("triprotocol-benchmark/round_tripper")
 
 type RoundTripper interface {
 	RequestReply(ctx context.Context, address string, req []byte) ([]byte, error)
