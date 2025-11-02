@@ -797,8 +797,8 @@ func (m model) renderLeftPanel(width int) string {
 
 		happenedAt := inputStyle.Render(time.Since(op.whenHappened).Truncate(time.Second).String())
 		renderedOperation := lipgloss.JoinHorizontal(lipgloss.Top, status, "|", operation, " at ", happenedAt, "|", protocol, "|", params)
-		lastOperations = append(lastOperations, renderedOperation)
-		lastOperations = append(lastOperations, "")
+		lastOperations = append([]string{""}, lastOperations...)
+		lastOperations = append([]string{renderedOperation}, lastOperations...)
 	}
 
 	operationsPane := ""
