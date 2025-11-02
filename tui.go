@@ -514,7 +514,12 @@ func (m model) executeOperation() tea.Cmd {
 
 		authResp, err := authClient.Auth(ctx, serverAddress, authReq)
 		if err != nil {
-			return operationResultMsg{err: fmt.Errorf("authentication failed: %w", err)}
+			return operationResultMsg{
+				err: fmt.Errorf("authentication failed: %w", err),
+				operation: "auth",
+				params: m.enrollment.Value(),
+				protocol: m.protocols[m.protocolIdx],
+			}
 		}
 
 		token := authResp.Token
