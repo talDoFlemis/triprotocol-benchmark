@@ -135,8 +135,8 @@ func initStyles() {
 		Background(colorButtonActive)
 
 	panelBorderStyle = lipgloss.NewStyle().
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(colorMuted)
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(colorBackground)
 
 	errorPopupStyle = lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).

@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	minWidth  = 80
+	minWidth  = 120
 	minHeight = 30
 )
 
@@ -206,6 +206,8 @@ type model struct {
 	viewport        viewport.Model
 	leftPanelWidth  int
 	rightPanelWidth int
+
+	renderer *glamour.TermRenderer
 }
 
 const defaultEnrollmentID = "538349"
@@ -224,6 +226,14 @@ func initialModel(settings *Settings) model {
 	paramsInput.PromptStyle = inputStyle
 	paramsInput.TextStyle = inputStyle
 
+	r, err := glamour.NewTermRenderer(
+		glamour.WithAutoStyle(),
+		glamour.WithWordWrap(minWidth/2-10),
+	)
+	if err != nil {
+		panic(err)
+	}
+
 	prog := progress.New(progress.WithDefaultGradient())
 
 	return model{
@@ -238,8 +248,9 @@ func initialModel(settings *Settings) model {
 		progress:     prog,
 		focusIndex:   focusProtocol,
 		settings:     settings,
-		width:        80,
-		height:       24,
+		width:        minWidth,
+		height:       minHeight,
+		renderer:     r,
 	}
 }
 
@@ -256,8 +267,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 		m.help.Width = msg.Width
 
-		m.leftPanelWidth = msg.Width / 2
-		m.rightPanelWidth = msg.Width - m.leftPanelWidth - 3
+		m.leftPanelWidth = minWidth / 2
+		m.rightPanelWidth = minWidth - m.leftPanelWidth
 
 		headerHeight := lipgloss.Height(m.headerView())
 		footerHeight := lipgloss.Height(m.footerView())
@@ -268,9 +279,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.viewport.YPosition = headerHeight
 			m.viewport.SetContent("")
 			m.ready = true
+			m.viewport.KeyMap = viewport.DefaultKeyMap()
 		} else {
-			m.viewport.Width = m.rightPanelWidth - 10
-			m.viewport.Height = msg.Height - verticalMarginHeight
+			m.viewport.Width = m.rightPanelWidth
+			m.viewport.Height = minHeight - verticalMarginHeight
 		}
 		return m, nil
 
@@ -329,11 +341,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case key.Matches(msg, m.keys.Down):
 			m.viewport.ScrollDown(1)
-			return m, nil
 
 		case key.Matches(msg, m.keys.Up):
 			m.viewport.ScrollUp(1)
-			return m, nil
 		}
 
 	case operationResultMsg:
@@ -344,9 +354,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.errorMsg = msg.err.Error()
 		} else {
 			m.result = msg.result
+			content := ""
+
+			markdown := "```json\n" + m.result + "\n```"
+			rendered, err := m.renderer.Render(markdown)
+			if err == nil {
+				content = rendered
+			} else {
+				// Fallback to plain text if glamour fails
+				content = m.result
+			}
+			m.viewport.SetContent(content)
 		}
 		return m, nil
 	}
+
+	m.viewport, cmd = m.viewport.Update(msg)
 
 	// Handle text input updates
 	switch m.focusIndex {
@@ -372,14 +395,13 @@ func (m *model) updateFocus() {
 }
 
 func (m model) headerView() string {
-	localTitleStyle := titleStyle.Width(m.rightPanelWidth)
+	localTitleStyle := titleStyle.Width(m.viewport.Width)
 	title := localTitleStyle.Render("╔═ Response ═╗")
-	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(title)))
-	return lipgloss.JoinHorizontal(lipgloss.Center, title, line)
+	return title
 }
 
 func (m model) footerView() string {
-	info := hintStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
+	info := panelBorderStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
 	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(info)))
 	return lipgloss.JoinHorizontal(lipgloss.Center, line, info)
 }
@@ -593,18 +615,8 @@ func (m model) View() string {
 		)
 	}
 
-	// Use fixed content dimensions
-	contentWidth := minWidth
-	contentHeight := 80
-	if m.height > contentHeight {
-		contentHeight = m.height - 10
-	}
-
-	leftPanelWidth := contentWidth / 2
-	rightPanelWidth := contentWidth - leftPanelWidth - 3
-
-	leftPanel := m.renderLeftPanel(leftPanelWidth)
-	rightPanel := m.renderRightPanel(rightPanelWidth)
+	leftPanel := m.renderLeftPanel(m.leftPanelWidth)
+	rightPanel := m.renderRightPanel(m.rightPanelWidth)
 
 	// Combine panels side by side
 	mainContent := lipgloss.JoinHorizontal(
@@ -615,10 +627,14 @@ func (m model) View() string {
 
 	// Add help at the bottom
 	helpView := m.help.View(m.keys)
-	separator := separatorStyle.Width(contentWidth).Render(strings.Repeat("─", contentWidth))
+	separator := separatorStyle.Width(minWidth).Render(strings.Repeat("─", minWidth))
+
+	title := titleStyle.Render("╔═ Triprotocol Client ═╗")
 
 	fullView := lipgloss.JoinVertical(
-		lipgloss.Left,
+		lipgloss.Center,
+		title,
+		"",
 		mainContent,
 		"",
 		separator,
@@ -650,7 +666,7 @@ func (m model) renderLeftPanel(width int) string {
 	localHintStyle := hintStyle.Width(width)
 
 	// Title
-	title := localTitleStyle.Render("╔═ Triprotocol Client ═╗")
+	title := localTitleStyle.Render("╔═ Options ═╗")
 
 	// Protocol section (styled as tabs)
 	protocolLabel := "Protocol:"
@@ -722,9 +738,9 @@ func (m model) renderLeftPanel(width int) string {
 	// Submit button
 	buttonRendered := ""
 	if m.focusIndex == focusSubmit {
-		buttonRendered = localFieldStyle.Render("  " + buttonFocusedStyle.Render("[ SUBMIT ]"))
+		buttonRendered = localFieldStyle.Render("  " + buttonFocusedStyle.Render("SUBMIT"))
 	} else {
-		buttonRendered = localFieldStyle.Render("  " + buttonBlurredStyle.Render("  SUBMIT  "))
+		buttonRendered = localFieldStyle.Render("  " + buttonBlurredStyle.Render("SUBMIT"))
 	}
 
 	return lipgloss.JoinVertical(
@@ -758,45 +774,27 @@ func (m model) renderRightPanel(width int) string {
 			"",
 			progressBar,
 		)
-	} else if m.result != "" {
-		// Use glamour to render the result as markdown
-		r, err := glamour.NewTermRenderer(
-			glamour.WithAutoStyle(),
-			glamour.WithWordWrap(width-4),
-		)
-
-		if err == nil {
-			// Wrap JSON in markdown code block
-			markdown := "```json\n" + m.result + "\n```"
-			rendered, err := r.Render(markdown)
-			if err == nil {
-				content = rendered
-			} else {
-				// Fallback to plain text if glamour fails
-				content = m.result
-			}
-		} else {
-			// Fallback to plain text if glamour fails
-			content = m.result
-		}
-	} else {
+	} else if m.result == "" {
 		content = lipgloss.JoinVertical(
 			lipgloss.Left,
 			"No results yet.",
 			"Fill in the form and",
 			"submit a request.",
 		)
+	} else {
+		content = m.viewport.View()
 	}
 
-	m.viewport.SetContent(content)
-
-	return lipgloss.JoinVertical(
+	panel := lipgloss.JoinVertical(
 		lipgloss.Left,
 		m.headerView(),
 		"",
-		m.viewport.View(),
+		content,
+		"",
 		m.footerView(),
 	)
+
+	return panelBorderStyle.Padding(1).Render(panel)
 }
 
 func (m model) renderErrorPopup(background string) string {
@@ -841,18 +839,21 @@ func (m model) renderErrorPopup(background string) string {
 		errorHintStyle.Render("Press any key to close"),
 	)
 
-	// Render popup with styling
-	popup := errorPopupStyle.
+	popupWidget := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(colorError).
+		Background(colorBackground).
+		Foreground(colorText).
+		Padding(1, 2).
 		Width(popupWidth).
 		Render(popupContent)
 
-	// Use lipgloss.Place to center the popup over the background
 	return lipgloss.Place(
 		m.width,
 		m.height,
 		lipgloss.Center,
 		lipgloss.Center,
-		popup,
+		popupWidget,
 		lipgloss.WithWhitespaceChars(" "),
 		lipgloss.WithWhitespaceForeground(lipgloss.Color("0")),
 	)
