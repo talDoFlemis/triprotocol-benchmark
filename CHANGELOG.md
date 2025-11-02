@@ -1,3 +1,9 @@
+## [1.9.1](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.9.0...v1.9.1) (2025-11-02)
+
+### Code Refactoring
+
+* **tui:** run in reverse order ([5030e61](https://github.com/talDoFlemis/triprotocol-benchmark/commit/5030e61ea526ceb3e708b58ec0d0448407f69b62))
+
 ## [1.9.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.8.0...v1.9.0) (2025-11-02)
 
 ### Features
