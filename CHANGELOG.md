@@ -1,3 +1,13 @@
+## [1.10.2](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.10.1...v1.10.2) (2025-11-02)
+
+### Documentation
+
+* add README ([93c00de](https://github.com/talDoFlemis/triprotocol-benchmark/commit/93c00de5264801905a8e1ac2900ce5201958b7ca))
+
+### Code Refactoring
+
+* remove handler ([596f26c](https://github.com/talDoFlemis/triprotocol-benchmark/commit/596f26c2742478af437f6aea31bced2c59f0311c))
+
 ## [1.10.1](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.10.0...v1.10.1) (2025-11-02)
 
 ### Bug Fixes
