@@ -1,3 +1,18 @@
+## [1.9.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.8.0...v1.9.0) (2025-11-02)
+
+### Features
+
+* add last operation logs ([2e67d4f](https://github.com/talDoFlemis/triprotocol-benchmark/commit/2e67d4fa15b34473c2cd83fa37b1a9dbdb210a5c))
+* add progress bar and glamoour render ([51b8588](https://github.com/talDoFlemis/triprotocol-benchmark/commit/51b85882ea7bb90d3ed712a1267282f269ae9293))
+* add scrolling to viewport ([83b3c4a](https://github.com/talDoFlemis/triprotocol-benchmark/commit/83b3c4abdd15919ba0ac961f27482de5f44ab61f))
+* add viewport rendering ([9b4d988](https://github.com/talDoFlemis/triprotocol-benchmark/commit/9b4d98824b0fa51bfa197b1302b534a6d329e9c8))
+
+### Bug Fixes
+
+* **auth:** dont use pointer ([e8babf4](https://github.com/talDoFlemis/triprotocol-benchmark/commit/e8babf46a27ca734990efaa3136488bacc3c57c9))
+* **round_triper:** remove null terminator string ([e3f1d55](https://github.com/talDoFlemis/triprotocol-benchmark/commit/e3f1d55c5ff3d23aba9fb333c68a90c43990a831))
+* **string_serde:** follow pointers ([5e25e07](https://github.com/talDoFlemis/triprotocol-benchmark/commit/5e25e072c77966f4e02f4a4ae7002d1271342b47))
+
 ## [1.8.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.7.0...v1.8.0) (2025-11-01)
 
 ### Features
