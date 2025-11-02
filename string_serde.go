@@ -72,7 +72,7 @@ func (s StringSerde) Marshal(v any) ([]byte, error) {
 		fieldType := t.Field(i)
 		fieldTagValue := getFieldTagValue(fieldType)
 
-		fieldValue := s.getStrFieldRepresentation(field)
+		fieldValue := getStrFieldRepresentation(field)
 
 		arg := fmt.Sprintf("%s=%v", fieldTagValue, fieldValue)
 		args = append(args, arg)
@@ -87,7 +87,7 @@ func (s StringSerde) Marshal(v any) ([]byte, error) {
 	return []byte(result), nil
 }
 
-func (s StringSerde) getStrFieldRepresentation(field reflect.Value) string {
+func getStrFieldRepresentation(field reflect.Value) string {
 	var fieldValue string
 
 	inter := field.Interface()
