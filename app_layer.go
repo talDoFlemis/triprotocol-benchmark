@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -124,13 +125,16 @@ func internalDo[T OperationRequest, R OperationResponse](ctx context.Context, ad
 		presentationLayerReq.Token = token
 	}
 
+	start := time.Now()
 	rawRequest, err := serde.Marshal(presentationLayerReq)
 	if err != nil {
 		logger.ErrorContext(ctx, "Error serializing request", slog.String("error", err.Error()))
 		return err
 	}
 
-	logger.DebugContext(ctx, "Sending request", slog.String("request", string(rawRequest)))
+	logger.DebugContext(ctx, "Duration marshalling took", slog.Duration("duration", time.Since(start)))
+
+	logger.DebugContext(ctx, "Sending request", slog.String("request", string(rawRequest)), slog.Int("size", len(rawRequest)))
 
 	rawResponse, err := roundTripper.RequestReply(ctx, address, rawRequest)
 	if err != nil {
@@ -138,17 +142,20 @@ func internalDo[T OperationRequest, R OperationResponse](ctx context.Context, ad
 		return err
 	}
 
-	logger.DebugContext(ctx, "Received response", slog.String("response", string(rawResponse)))
+	logger.DebugContext(ctx, "Received response", slog.String("response", string(rawResponse)), slog.Int("size", len(rawResponse)))
 
 	appLayerResp := PresentationLayerResponse[R]{
 		Body: resp,
 	}
 
+	start = time.Now()
 	err = serde.Unmarshal(rawResponse, &appLayerResp)
 	if err != nil {
 		logger.ErrorContext(ctx, "Error deserializing response", slog.String("error", err.Error()))
 		return err
 	}
+
+	slog.DebugContext(ctx, "Duration unmarshalling took", slog.Duration("duration", time.Since(start)))
 
 	if appLayerResp.StatusCode >= http.StatusBadRequest {
 		logger.ErrorContext(ctx, "Operation returned error", slog.Int("status_code", appLayerResp.StatusCode))
