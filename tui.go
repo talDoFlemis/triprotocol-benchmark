@@ -100,6 +100,14 @@ var (
 			Foreground(colorMuted)
 )
 
+type lastOperation struct {
+	success      bool
+	operation    string
+	params       string
+	protocol     string
+	whenHappened time.Time
+}
+
 // Key bindings
 type keyMap struct {
 	Up       key.Binding
@@ -160,8 +168,11 @@ var keys = keyMap{
 
 // Message types for async operations
 type operationResultMsg struct {
-	result string
-	err    error
+	operation string
+	params    string
+	protocol  string
+	result    string
+	err       error
 }
 
 type focusField int
@@ -207,7 +218,8 @@ type model struct {
 	leftPanelWidth  int
 	rightPanelWidth int
 
-	renderer *glamour.TermRenderer
+	renderer       *glamour.TermRenderer
+	lastOperations []lastOperation
 }
 
 const defaultEnrollmentID = "538349"
@@ -237,20 +249,21 @@ func initialModel(settings *Settings) model {
 	prog := progress.New(progress.WithDefaultGradient())
 
 	return model{
-		protocolIdx:  0,
-		protocols:    []string{"json", "string", "protobuf"},
-		enrollment:   enrollment,
-		operationIdx: 0,
-		operations:   []string{"echo", "sum", "timestamp", "history", "status"},
-		paramsInput:  paramsInput,
-		help:         help.New(),
-		keys:         keys,
-		progress:     prog,
-		focusIndex:   focusProtocol,
-		settings:     settings,
-		width:        minWidth,
-		height:       minHeight,
-		renderer:     r,
+		protocolIdx:    0,
+		protocols:      []string{"json", "string", "protobuf"},
+		enrollment:     enrollment,
+		operationIdx:   0,
+		operations:     []string{"echo", "sum", "timestamp", "history", "status"},
+		paramsInput:    paramsInput,
+		help:           help.New(),
+		keys:           keys,
+		progress:       prog,
+		focusIndex:     focusProtocol,
+		settings:       settings,
+		width:          minWidth,
+		height:         minHeight,
+		renderer:       r,
+		lastOperations: make([]lastOperation, 0),
 	}
 }
 
@@ -347,12 +360,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case operationResultMsg:
+		newOp := lastOperation{
+			whenHappened: time.Now(),
+			operation:    msg.operation,
+			protocol:     msg.protocol,
+			params:       msg.params,
+		}
 		m.loading = false
 		if msg.err != nil {
+			newOp.success = false
 			m.showError = true
 			m.isValidation = false
 			m.errorMsg = msg.err.Error()
 		} else {
+			newOp.success = true
 			m.result = msg.result
 			content := ""
 
@@ -366,6 +387,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			m.viewport.SetContent(content)
 		}
+
+		if len(m.lastOperations) >= 5 {
+			m.lastOperations = m.lastOperations[1:]
+		}
+
+		m.lastOperations = append(m.lastOperations, newOp)
+
 		return m, nil
 	}
 
@@ -577,7 +605,12 @@ func (m model) executeOperation() tea.Cmd {
 			)
 			logoutReq := &LogoutRequest{}
 			logoutClient.Logout(ctx, serverAddress, logoutReq, token)
-			return operationResultMsg{err: fmt.Errorf("operation failed: %w", err)}
+			return operationResultMsg{
+				err:       fmt.Errorf("operation failed: %w", err),
+				protocol:  m.protocols[m.protocolIdx],
+				params:    m.paramsInput.Value(),
+				operation: op,
+			}
 		}
 
 		// 3. Logout
@@ -592,7 +625,12 @@ func (m model) executeOperation() tea.Cmd {
 			result += "\n\nWarning: Logout failed: " + err.Error()
 		}
 
-		return operationResultMsg{result: result}
+		return operationResultMsg{
+			result:    result,
+			protocol:  m.protocols[m.protocolIdx],
+			params:    m.paramsInput.Value(),
+			operation: op,
+		}
 	}
 }
 
@@ -743,6 +781,32 @@ func (m model) renderLeftPanel(width int) string {
 		buttonRendered = localFieldStyle.Render("  " + buttonBlurredStyle.Render("SUBMIT"))
 	}
 
+	lastOperations := []string{}
+
+	for _, op := range m.lastOperations {
+		operation := inputStyle.Render(op.operation)
+
+		status := inputStyle.Render("✅")
+
+		if !op.success {
+			status = errorTitleStyle.Render("❌")
+		}
+
+		protocol := titleStyle.Render(op.protocol)
+		params := inputStyle.Render(op.params)
+
+		happenedAt := inputStyle.Render(time.Since(op.whenHappened).Truncate(time.Second).String())
+		renderedOperation := lipgloss.JoinHorizontal(lipgloss.Top, status, "|", operation, " at ", happenedAt, "|", protocol, "|", params)
+		lastOperations = append(lastOperations, renderedOperation)
+		lastOperations = append(lastOperations, "")
+	}
+
+	operationsPane := ""
+	if len(lastOperations) != 0 {
+		operationsPane = lipgloss.JoinVertical(lipgloss.Left, lastOperations...)
+		operationsPane = panelBorderStyle.Width(width).Padding(1).Render(operationsPane)
+	}
+
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		title,
@@ -761,6 +825,8 @@ func (m model) renderLeftPanel(width int) string {
 		paramsHint,
 		"",
 		buttonRendered,
+		"",
+		operationsPane,
 	)
 }
 
