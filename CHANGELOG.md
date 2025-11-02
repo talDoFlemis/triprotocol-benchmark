@@ -1,3 +1,9 @@
+## [1.10.3](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.10.2...v1.10.3) (2025-11-02)
+
+### Code Refactoring
+
+* remove old http error ([252aa0c](https://github.com/talDoFlemis/triprotocol-benchmark/commit/252aa0c60790bd6bacf7394df41d69a5f3d7bafb))
+
 ## [1.10.2](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.10.1...v1.10.2) (2025-11-02)
 
 ### Documentation
