@@ -1,3 +1,20 @@
+## [1.10.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.9.1...v1.10.0) (2025-11-02)
+
+### Features
+
+* add Dockerfile ([c8d18e4](https://github.com/talDoFlemis/triprotocol-benchmark/commit/c8d18e4282db6c4a284c9454096aa6c75b61f018))
+* add duration and size logs to app_layer ([9ceee64](https://github.com/talDoFlemis/triprotocol-benchmark/commit/9ceee642f4387d51eef72e383de5c6b2990397bf))
+* add release ([cb46138](https://github.com/talDoFlemis/triprotocol-benchmark/commit/cb461388eec6d4f607eb9216909a1960b39979e0))
+* **tui:** add slog debug logger ([9cf6ec2](https://github.com/talDoFlemis/triprotocol-benchmark/commit/9cf6ec229c3ce7f7abadf250224fb7db8844fe35))
+
+### Bug Fixes
+
+* **tui:** missing operation, params and protocol when failing in auth ([ec43c2c](https://github.com/talDoFlemis/triprotocol-benchmark/commit/ec43c2c33dce632758813dd97edc932c27153a34))
+
+### Code Refactoring
+
+* **string_serde:** make get str field representation a fn ([b29e9fc](https://github.com/talDoFlemis/triprotocol-benchmark/commit/b29e9fc84444ff0c7fc7b9c9ff67a241317e44f3))
+
 ## [1.9.1](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.9.0...v1.9.1) (2025-11-02)
 
 ### Code Refactoring
