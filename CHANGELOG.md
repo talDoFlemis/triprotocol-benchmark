@@ -1,3 +1,9 @@
+## [1.10.1](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.10.0...v1.10.1) (2025-11-02)
+
+### Bug Fixes
+
+* **release:** missing service name ([7c33a3b](https://github.com/talDoFlemis/triprotocol-benchmark/commit/7c33a3b118024b3dbb952b330c68d7f2e968f72a))
+
 ## [1.10.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.9.1...v1.10.0) (2025-11-02)
 
 ### Features
