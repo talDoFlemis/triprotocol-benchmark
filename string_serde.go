@@ -139,6 +139,18 @@ func (s StringSerde) Unmarshal(data []byte, v any) error {
 		return fmt.Errorf("invalid response from server, expected at least 3 parameters, found %d, data %s", len(dataArgs), string(data))
 	}
 
+	if dataArgs[len(dataArgs)] != "FIM" {
+		err := PresentationLayerErrorResponse{
+			Code:    http.StatusText(http.StatusInternalServerError),
+			Message: "Malformed response from server: missing FIM token",
+			Details: make(map[string]any),
+		}
+
+		errField := value.FieldByName("Err")
+		errField.Set(reflect.ValueOf(&err))
+		return nil
+	}
+
 	// Ignore FIM token
 	dataArgs = dataArgs[:len(dataArgs)-1]
 
