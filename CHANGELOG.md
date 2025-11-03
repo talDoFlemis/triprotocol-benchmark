@@ -1,3 +1,9 @@
+## [1.11.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.10.3...v1.11.0) (2025-11-03)
+
+### Features
+
+* **string_serde:** add handling of missing end of token stream from shitty server ([5f63f8c](https://github.com/talDoFlemis/triprotocol-benchmark/commit/5f63f8c1a9e33c17ef132ab89058b8bd45321570))
+
 ## [1.10.3](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.10.2...v1.10.3) (2025-11-02)
 
 ### Code Refactoring
