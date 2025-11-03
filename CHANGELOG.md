@@ -1,3 +1,9 @@
+## [1.11.1](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.11.0...v1.11.1) (2025-11-03)
+
+### Bug Fixes
+
+* **string_serde:** oob error on len data ([63aa3a9](https://github.com/talDoFlemis/triprotocol-benchmark/commit/63aa3a937d11b31031d36eabcebb933594b5b794))
+
 ## [1.11.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.10.3...v1.11.0) (2025-11-03)
 
 ### Features
