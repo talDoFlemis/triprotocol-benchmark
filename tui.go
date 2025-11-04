@@ -39,6 +39,14 @@ var (
 	colorButtonBg     = lipgloss.Color("0")
 )
 
+type tickMsg time.Time
+
+func doTick() tea.Cmd {
+	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
+		return tickMsg(t)
+	})
+}
+
 // Styles
 var (
 	titleStyle = lipgloss.NewStyle().
@@ -269,13 +277,15 @@ func initialModel(settings *Settings) model {
 }
 
 func (m model) Init() tea.Cmd {
-	return textinput.Blink
+	return tea.Batch(doTick(), textinput.Blink)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
+	case tickMsg:
+		return m, doTick() // Schedule the next tick
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
@@ -515,10 +525,10 @@ func (m model) executeOperation() tea.Cmd {
 		authResp, err := authClient.Auth(ctx, serverAddress, authReq)
 		if err != nil {
 			return operationResultMsg{
-				err: fmt.Errorf("authentication failed: %w", err),
+				err:       fmt.Errorf("authentication failed: %w", err),
 				operation: "auth",
-				params: m.enrollment.Value(),
-				protocol: m.protocols[m.protocolIdx],
+				params:    m.enrollment.Value(),
+				protocol:  m.protocols[m.protocolIdx],
 			}
 		}
 
