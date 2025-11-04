@@ -60,6 +60,10 @@ func (t *NonISO8601Time) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	return t.Parse(s)
+}
+
+func (t *NonISO8601Time) Parse(s string) error {
 	parsedTime, err := time.Parse("2006-01-02T15:04:05.000000", s)
 	if err != nil {
 		return err
