@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -30,21 +31,41 @@ func (p ProtobufSerde) Marshal(v any) ([]byte, error) {
 		return nil, err
 	}
 
-	return proto.Marshal(msg)
+	msgBytes, err := proto.Marshal(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	data := make([]byte, 4)
+	// Calculate header size
+	binary.BigEndian.PutUint32(data, uint32(len(msgBytes)))
+
+	data = append(data, msgBytes...)
+
+	return data, nil
 }
 
 // Unmarshal implements Serde.
 func (p ProtobufSerde) Unmarshal(data []byte, v any) error {
-	resp, ok := v.(*PresentationLayerResponse[OperationResponse])
-	if !ok {
-		return fmt.Errorf("expected PresentationLayerResponse, found %v", reflect.TypeOf(v).Name())
+	typ := reflect.TypeOf(v)
+	value := reflect.ValueOf(v)
+
+	if typ.Kind() != reflect.Pointer {
+		return fmt.Errorf("pointers are supported, found %s", typ.Kind().String())
 	}
 
-	bodyField := reflect.ValueOf(resp.Body)
-
-	if bodyField.Kind() != reflect.Pointer {
-		return fmt.Errorf("expected pointer to change inner value, found %v", reflect.TypeOf(resp.Body).Name())
+	if value.IsNil() {
+		return fmt.Errorf("nil pointer provided")
 	}
+
+	value = value.Elem()
+
+	headerSize := binary.BigEndian.Uint32(data[:4])
+	if len(data) < int(4+headerSize) {
+		return fmt.Errorf("data size is smaller than header size, probably corrupted data")
+	}
+
+	data = data[4 : 4+headerSize]
 
 	msg := &protogenerated.Resposta{}
 	err := proto.Unmarshal(data, msg)
@@ -53,13 +74,13 @@ func (p ProtobufSerde) Unmarshal(data []byte, v any) error {
 		return err
 	}
 
-	domain, err := fromProtoToDomain(msg)
+	err = fromProtoToDomain(msg, value)
 	if err != nil {
 		slog.Error("Error converting", slog.String("error", err.Error()))
 		return err
 	}
 
-	return copyStruct(domain, v)
+	return nil
 }
 
 func fromDomainToProto(v PresentationLayerRequest) (proto.Message, error) {
@@ -123,41 +144,54 @@ func fromDomainToProto(v PresentationLayerRequest) (proto.Message, error) {
 	return msg, nil
 }
 
-func fromProtoToDomain(msg *protogenerated.Resposta) (*PresentationLayerResponse[OperationResponse], error) {
-	resp := &PresentationLayerResponse[OperationResponse]{}
-	respBody := reflect.ValueOf(resp)
-
+func fromProtoToDomain(msg *protogenerated.Resposta, value reflect.Value) error {
 	errorMsg := msg.GetErro()
 	if errorMsg != nil {
-		resp.StatusCode = http.StatusInternalServerError
 		details := make(map[string]any)
 
 		for key, value := range errorMsg.Detalhes {
 			details[key] = value
 		}
 
-		resp.Err = &PresentationLayerErrorResponse{
+		value.FieldByName("StatusCode").SetInt(int64(http.StatusInternalServerError))
+
+		err := PresentationLayerErrorResponse{
 			Code:    http.StatusText(http.StatusInternalServerError),
 			Message: errorMsg.Mensagem,
 			Details: details,
 		}
+		value.FieldByName("Err").Set(reflect.ValueOf(&err))
 
-		return resp, nil
+		return nil
 	}
 
 	okMsg := msg.GetOk()
 	if okMsg == nil {
-		return nil, fmt.Errorf("expected to have a pointer to RespostaOK")
+		return fmt.Errorf("expected to have a pointer to RespostaOK")
 	}
 
-	timestampField := respBody.FieldByName("Timestamp")
-	if timestampField.IsValid() && timestampField.CanSet() {
-		timestampField.Set(reflect.ValueOf(okMsg.Timestamp))
+	value.FieldByName("Err").Set(reflect.Zero(value.FieldByName("Err").Type()))
+	bodyField := value.FieldByName("Body")
+
+	if bodyField.Kind() != reflect.Pointer && bodyField.Kind() != reflect.Interface {
+		return fmt.Errorf("body field is not a pointer or interface: %v", bodyField.Kind())
 	}
+
+	if bodyField.Kind() == reflect.Interface {
+		bodyField = bodyField.Elem()
+	}
+
+	if bodyField.IsNil() {
+		bodyField.Set(reflect.New(bodyField.Type().Elem()))
+	}
+
+	bodyField = bodyField.Elem()
+
+	okMsg.Dados["timestamp"] = okMsg.Timestamp
 
 	for key, value := range okMsg.Dados {
 		slog.Info("here", "key", key, "value", value)
 	}
 
-	return resp, nil
+	return bindStructFields(bodyField, okMsg.Dados)
 }
