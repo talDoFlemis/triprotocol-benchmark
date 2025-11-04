@@ -1,3 +1,9 @@
+## [1.12.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.11.1...v1.12.0) (2025-11-04)
+
+### Features
+
+* add second ticker for showing logs with updated time ([05500ff](https://github.com/talDoFlemis/triprotocol-benchmark/commit/05500ff5942c3bb9f38950155679cba2e323f483))
+
 ## [1.11.1](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.11.0...v1.11.1) (2025-11-03)
 
 ### Bug Fixes
