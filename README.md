@@ -31,7 +31,27 @@ A comprehensive protocol serialization benchmark and validation server that supp
 - [Project Structure](#project-structure)
 - [License](#license)
 
-## 🛠️ Requirements
+## � Quick Start with Docker
+
+Want to try the app immediately without cloning the repository? Run it directly using Docker:
+
+```bash
+docker run --rm --pull always -it ghcr.io/taldoflemis/triprotocol-benchmark/tui:latest
+```
+
+This command will:
+- Pull the latest image from GitHub Container Registry
+- Run the interactive TUI (Terminal User Interface)
+- Automatically remove the container when you exit
+- Always fetch the latest version
+
+**Note**: The TUI requires an interactive terminal (`-it` flags). For headless server mode, use:
+
+```bash
+docker run --rm --pull always -p 8080:8080 ghcr.io/taldoflemis/triprotocol-benchmark/tui:latest
+```
+
+## �🛠️ Requirements
 
 - Go 1.24.5 or higher
 - Protocol Buffers compiler (`protoc`)
