@@ -1,3 +1,15 @@
+## [1.13.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.12.0...v1.13.0) (2025-11-05)
+
+### Features
+
+* **domain:** add non iso parse fn ([4eadbe9](https://github.com/talDoFlemis/triprotocol-benchmark/commit/4eadbe9dd269400e22bd0f5f5f2a616e75a2a755))
+* **proto_requests:** parse header ([936c1b5](https://github.com/talDoFlemis/triprotocol-benchmark/commit/936c1b54f9200ef8b1f293a7eb305b4c0ee71192))
+
+### Bug Fixes
+
+* **protobuf_serde:** enter body interface value ([dff4907](https://github.com/talDoFlemis/triprotocol-benchmark/commit/dff4907a0b490e81cd57ab6ce6df1582441c8e68))
+* **string_serde:** only add [ if string dont starts with it ([f0e2928](https://github.com/talDoFlemis/triprotocol-benchmark/commit/f0e2928d24ff8cba1c981ef374a7d1808033cbc1))
+
 ## [1.12.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.11.1...v1.12.0) (2025-11-04)
 
 ### Features
