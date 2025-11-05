@@ -297,8 +297,11 @@ func setFieldValueFromString(field reflect.Value, valueStr string) error {
 		}
 		field.SetBool(fieldValue)
 	case reflect.Slice:
-		// Convert string to slice representation
-		valueStr = "[" + valueStr + "]"
+		// Convert string to slice representation only if not already
+		if !strings.HasPrefix(valueStr, "[") {
+			valueStr = "[" + valueStr + "]"
+		}
+
 		elementType := field.Type().Elem()
 		newSlice := reflect.MakeSlice(field.Type(), 0, 0)
 
