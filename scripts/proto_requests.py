@@ -6,7 +6,7 @@ import struct
 from datetime import datetime
 
 
-host = "54.174.195.77"
+host = "3.88.99.255"
 port = 8082
 aluno_id = "538349"
 
