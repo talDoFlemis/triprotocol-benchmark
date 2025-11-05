@@ -110,8 +110,10 @@ func fromDomainToProto(v PresentationLayerRequest) (proto.Message, error) {
 			return nil, fmt.Errorf("expected a operation, found %v", reflect.TypeOf(body).Name())
 		}
 
-		operationName := body.CommandOrOperationName()
 		params := make(map[string]string)
+
+		bodyValue = reflect.ValueOf(body)
+		bodyType = reflect.TypeOf(body)
 
 		for i := range bodyValue.NumField() {
 			field := bodyValue.Field(i)
@@ -133,7 +135,7 @@ func fromDomainToProto(v PresentationLayerRequest) (proto.Message, error) {
 		msg.Tipo = &protogenerated.Requisicao_Operacao{
 			Operacao: &protogenerated.ComandoOperacao{
 				Token:      v.Token,
-				Operacao:   operationName,
+				Operacao:   body.CommandOrOperationName(),
 				Parametros: params,
 			},
 		}
