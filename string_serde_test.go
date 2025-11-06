@@ -330,3 +330,284 @@ func TestStringDeserialization(t *testing.T) {
 		})
 	}
 }
+
+func TestStringUnmarshalErrorHandling(t *testing.T) {
+	tests := []struct {
+		name           string
+		inputString    string
+		bindStruct     PresentationLayerResponse[OperationResponse]
+		expectedErr    bool
+		expectedErrMsg string
+	}{
+		{
+			name:           "Missing FIM terminator",
+			inputString:    "OK|token=abc123|nome=Test User",
+			bindStruct:     PresentationLayerResponse[OperationResponse]{Body: &AuthResponse{}},
+			expectedErr:    false,
+			expectedErrMsg: "",
+		},
+		{
+			name:           "Invalid format - too few parameters",
+			inputString:    "OK|FIM",
+			bindStruct:     PresentationLayerResponse[OperationResponse]{Body: &AuthResponse{}},
+			expectedErr:    true,
+			expectedErrMsg: "invalid response from server, expected at least 3 parameters",
+		},
+		{
+			name:           "Empty string",
+			inputString:    "",
+			bindStruct:     PresentationLayerResponse[OperationResponse]{Body: &AuthResponse{}},
+			expectedErr:    true,
+			expectedErrMsg: "invalid response from server, expected at least 3 parameters",
+		},
+		{
+			name:           "Invalid argument format - missing equals sign",
+			inputString:    "OK|invalidargument|FIM",
+			bindStruct:     PresentationLayerResponse[OperationResponse]{Body: &AuthResponse{}},
+			expectedErr:    true,
+			expectedErrMsg: "expected 2 args after spliting argument",
+		},
+		{
+			name:           "Unknown status code",
+			inputString:    "UNKNOWN|msg=test|FIM",
+			bindStruct:     PresentationLayerResponse[OperationResponse]{Body: &AuthResponse{}},
+			expectedErr:    true,
+			expectedErrMsg: "unexpected status code UNKNOWN",
+		},
+		{
+			name:           "Multiple equals signs in argument",
+			inputString:    "OK|key=value=extra=data|FIM",
+			bindStruct:     PresentationLayerResponse[OperationResponse]{Body: &AuthResponse{}},
+			expectedErr:    true,
+			expectedErrMsg: "expected 2 args after spliting argument",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			serde := StringSerde{}
+			err := serde.Unmarshal([]byte(tt.inputString), &tt.bindStruct)
+
+			if tt.expectedErr {
+				require.Error(t, err, "Expected an error but got none")
+				assert.Contains(t, err.Error(), tt.expectedErrMsg, "Error message should contain expected substring")
+			} else {
+				require.NoError(t, err, "Did not expect an error")
+			}
+		})
+	}
+}
+
+func TestStringUnmarshalErrorResponses(t *testing.T) {
+	tests := []struct {
+		name               string
+		inputString        string
+		bindStruct         PresentationLayerResponse[OperationResponse]
+		expectedStatusCode int
+		expectedErrCode    string
+		expectedErrMsg     string
+	}{
+		{
+			name:               "ERROR status response",
+			inputString:        "ERROR|msg=Internal server error occurred|FIM",
+			bindStruct:         PresentationLayerResponse[OperationResponse]{Body: &AuthResponse{}},
+			expectedStatusCode: http.StatusInternalServerError,
+			expectedErrCode:    "Internal Server Error",
+			expectedErrMsg:     "Internal server error occurred",
+		},
+		{
+			name:               "INVALIDO status response",
+			inputString:        "INVALIDO|msg=Invalid request parameters|FIM",
+			bindStruct:         PresentationLayerResponse[OperationResponse]{Body: &EchoResponse{}},
+			expectedStatusCode: http.StatusUnprocessableEntity,
+			expectedErrCode:    "Unprocessable Entity",
+			expectedErrMsg:     "Invalid request parameters",
+		},
+		{
+			name:               "ERROR with additional fields",
+			inputString:        "ERROR|msg=Database connection failed|detalhes=Connection timeout|FIM",
+			bindStruct:         PresentationLayerResponse[OperationResponse]{Body: &SumResponse{}},
+			expectedStatusCode: http.StatusInternalServerError,
+			expectedErrCode:    "Internal Server Error",
+			expectedErrMsg:     "Database connection failed",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			serde := StringSerde{}
+			err := serde.Unmarshal([]byte(tt.inputString), &tt.bindStruct)
+
+			require.NoError(t, err, "Unmarshal should not return an error for error responses")
+			assert.Equal(t, tt.expectedStatusCode, tt.bindStruct.StatusCode, "Status code should match")
+			require.NotNil(t, tt.bindStruct.Err, "Error field should be set")
+			assert.Equal(t, tt.expectedErrCode, tt.bindStruct.Err.Code, "Error code should match")
+			assert.Equal(t, tt.expectedErrMsg, tt.bindStruct.Err.Message, "Error message should match")
+		})
+	}
+}
+
+func TestStringUnmarshalInvalidFieldTypes(t *testing.T) {
+	tests := []struct {
+		name           string
+		inputString    string
+		bindStruct     PresentationLayerResponse[OperationResponse]
+		expectedErr    bool
+		expectedErrMsg string
+	}{
+		{
+			name:           "Invalid integer format",
+			inputString:    "OK|numeros_originais=1.0,2.0,3.0|quantidade=notanumber|soma=6.0|media=2.0|maximo=3.0|minimo=1.0|timestamp_calculo=2025-11-01T16:04:55.257055|timestamp=2025-11-01T16:04:55.256385|FIM",
+			bindStruct:     PresentationLayerResponse[OperationResponse]{Body: &SumResponse{}},
+			expectedErr:    true,
+			expectedErrMsg: "invalid syntax",
+		},
+		{
+			name:           "Invalid float format",
+			inputString:    "OK|numeros_originais=1.0,2.0,3.0|quantidade=3|soma=invalid.float.value|media=2.0|maximo=3.0|minimo=1.0|timestamp_calculo=2025-11-01T16:04:55.257055|timestamp=2025-11-01T16:04:55.256385|FIM",
+			bindStruct:     PresentationLayerResponse[OperationResponse]{Body: &SumResponse{}},
+			expectedErr:    true,
+			expectedErrMsg: "invalid syntax",
+		},
+		{
+			name:           "Invalid boolean format in AUTH context",
+			inputString:    "OK|token=abc|nome=Test|matricula=123|timestamp=2025-10-30T18:16:04.585339|FIM",
+			bindStruct:     PresentationLayerResponse[OperationResponse]{Body: &AuthResponse{}},
+			expectedErr:    false, // Should succeed
+			expectedErrMsg: "",
+		},
+		{
+			name:           "Invalid timestamp format",
+			inputString:    "OK|msg=Success|timestamp=not-a-valid-timestamp|FIM",
+			bindStruct:     PresentationLayerResponse[OperationResponse]{Body: &LogoutResponse{}},
+			expectedErr:    true,
+			expectedErrMsg: "parsing time",
+		},
+		{
+			name:           "Invalid unix timestamp format",
+			inputString:    "OK|timestamp_unix=invalid.unix.time|timestamp_iso=2025-10-31T16:48:30.985204|timestamp_formatado=31/10/2025 16:48:30|ano=2025|mes=10|dia=31|hora=16|minuto=48|segundo=30|microsegundo=985204|timestamp=2025-10-31T16:48:30.985333|FIM",
+			bindStruct:     PresentationLayerResponse[OperationResponse]{Body: &TimestampResponse{}},
+			expectedErr:    true,
+			expectedErrMsg: "error parsing unix timestamp",
+		},
+		{
+			name:           "Invalid slice format",
+			inputString:    "OK|numeros_originais=invalid-slice-data|quantidade=3|soma=6.0|media=2.0|maximo=3.0|minimo=1.0|timestamp_calculo=2025-11-01T16:04:55.257055|timestamp=2025-11-01T16:04:55.256385|FIM",
+			bindStruct:     PresentationLayerResponse[OperationResponse]{Body: &SumResponse{}},
+			expectedErr:    true,
+			expectedErrMsg: "error unmarshaling",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			serde := StringSerde{}
+			err := serde.Unmarshal([]byte(tt.inputString), &tt.bindStruct)
+
+			if tt.expectedErr {
+				require.Error(t, err, "Expected an error but got none")
+				assert.Contains(t, err.Error(), tt.expectedErrMsg, "Error message should contain expected substring")
+			} else {
+				require.NoError(t, err, "Did not expect an error")
+			}
+		})
+	}
+}
+
+func TestStringUnmarshalMalformedResponse(t *testing.T) {
+	tests := []struct {
+		name               string
+		inputString        string
+		bindStruct         PresentationLayerResponse[OperationResponse]
+		expectedStatusCode int
+		shouldHaveErr      bool
+		expectError        bool
+		errorMsg           string
+	}{
+		{
+			name:               "Missing FIM terminator sets error",
+			inputString:        "OK|token=abc123|nome=Test User",
+			bindStruct:         PresentationLayerResponse[OperationResponse]{Body: &AuthResponse{}},
+			expectedStatusCode: 0,
+			shouldHaveErr:      true,
+			expectError:        false,
+			errorMsg:           "",
+		},
+		{
+			name:               "Malformed with only status and FIM - too few params",
+			inputString:        "OK|FIM",
+			bindStruct:         PresentationLayerResponse[OperationResponse]{Body: &LogoutResponse{}},
+			expectedStatusCode: 0,
+			shouldHaveErr:      false,
+			expectError:        true,
+			errorMsg:           "invalid response from server, expected at least 3 parameters",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			serde := StringSerde{}
+			err := serde.Unmarshal([]byte(tt.inputString), &tt.bindStruct)
+
+			if tt.expectError {
+				require.Error(t, err, "Expected an error to be returned")
+				assert.Contains(t, err.Error(), tt.errorMsg, "Error message should match")
+				return
+			}
+
+			// For malformed responses (missing FIM), the function sets Err field but returns nil
+			require.NoError(t, err, "Unmarshal should not return an error for malformed responses")
+
+			if tt.shouldHaveErr {
+				require.NotNil(t, tt.bindStruct.Err, "Error field should be set for malformed response")
+				assert.Contains(t, tt.bindStruct.Err.Message, "missing FIM token", "Error message should indicate missing FIM")
+			}
+		})
+	}
+}
+
+func TestStringUnmarshalMissingRequiredFields(t *testing.T) {
+	tests := []struct {
+		name           string
+		inputString    string
+		bindStruct     PresentationLayerResponse[OperationResponse]
+		expectedErr    bool
+		expectedErrMsg string
+	}{
+		{
+			name:           "Missing required field - token in AuthResponse",
+			inputString:    "OK|nome=Test User|matricula=12345|timestamp=2025-10-30T18:16:04.585339|FIM",
+			bindStruct:     PresentationLayerResponse[OperationResponse]{Body: &AuthResponse{}},
+			expectedErr:    true,
+			expectedErrMsg: "property token not found",
+		},
+		{
+			name:           "Missing required field - msg in LogoutResponse",
+			inputString:    "OK|timestamp=2025-10-30T21:32:25.038812|FIM",
+			bindStruct:     PresentationLayerResponse[OperationResponse]{Body: &LogoutResponse{}},
+			expectedErr:    true,
+			expectedErrMsg: "property msg not found",
+		},
+		{
+			name:           "Missing required field - soma in SumResponse",
+			inputString:    "OK|numeros_originais=1.0,2.0,3.0|quantidade=3|media=2.0|maximo=3.0|minimo=1.0|timestamp_calculo=2025-11-01T16:04:55.257055|timestamp=2025-11-01T16:04:55.256385|FIM",
+			bindStruct:     PresentationLayerResponse[OperationResponse]{Body: &SumResponse{}},
+			expectedErr:    true,
+			expectedErrMsg: "property soma not found",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			serde := StringSerde{}
+			err := serde.Unmarshal([]byte(tt.inputString), &tt.bindStruct)
+
+			if tt.expectedErr {
+				require.Error(t, err, "Expected an error but got none")
+				assert.Contains(t, err.Error(), tt.expectedErrMsg, "Error message should contain expected substring")
+			} else {
+				require.NoError(t, err, "Did not expect an error")
+			}
+		})
+	}
+}
