@@ -1,3 +1,9 @@
+## [1.14.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.13.2...v1.14.0) (2025-11-06)
+
+### Features
+
+* add arm64 to release on docker build ([9c40997](https://github.com/talDoFlemis/triprotocol-benchmark/commit/9c40997d3e2e2cd047b186b1dcf338180bce5477))
+
 ## [1.13.2](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.13.1...v1.13.2) (2025-11-06)
 
 ### Documentation
