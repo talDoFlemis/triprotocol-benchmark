@@ -176,6 +176,16 @@ func (s StringSerde) Unmarshal(data []byte, v any) error {
 	statusField := value.FieldByName("StatusCode")
 	statusField.SetInt(int64(statusCode))
 
+	for _, arg := range dataArgs {
+		split := strings.Split(arg, "=")
+		if len(split) != 2 {
+			return fmt.Errorf("expected 2 args after spliting argument, found %d", len(split))
+		}
+
+		property, strValue := split[0], split[1]
+		properties[property] = strValue
+	}
+
 	if statusCode != http.StatusOK {
 		err := PresentationLayerErrorResponse{
 			Code:    http.StatusText(statusCode),
@@ -187,16 +197,6 @@ func (s StringSerde) Unmarshal(data []byte, v any) error {
 		errField.Set(reflect.ValueOf(&err))
 
 		return nil
-	}
-
-	for _, arg := range dataArgs {
-		split := strings.Split(arg, "=")
-		if len(split) != 2 {
-			return fmt.Errorf("expected 2 args after spliting argument, found %d", len(split))
-		}
-
-		property, strValue := split[0], split[1]
-		properties[property] = strValue
 	}
 
 	value.FieldByName("Err").Set(reflect.Zero(value.FieldByName("Err").Type()))
