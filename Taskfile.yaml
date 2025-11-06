@@ -7,3 +7,6 @@ tasks:
   proto:gen-python:
     desc: Generate Python code from proto files
     cmd: protoc --python_out=scripts --pyi_out=scripts ./proto/*.proto -I ./proto/
+  benchmark:
+    desc: Run benchmark
+    cmd: go test -bench . | vizb -o output.html --group-pattern "name/workload/subject" -n "Protocol Comparison Benchmarks" -d "Comparing different protocol manipulation for serialization and deserialization"
