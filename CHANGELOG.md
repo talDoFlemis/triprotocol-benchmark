@@ -1,3 +1,9 @@
+## [1.13.2](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.13.1...v1.13.2) (2025-11-06)
+
+### Documentation
+
+* **README:** update dockerfile section ([c335ddb](https://github.com/talDoFlemis/triprotocol-benchmark/commit/c335ddb57dc62e1e93d145f48b1f0a833cf41012))
+
 ## [1.13.1](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.13.0...v1.13.1) (2025-11-06)
 
 ### Documentation
