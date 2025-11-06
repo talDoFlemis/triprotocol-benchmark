@@ -60,8 +60,14 @@ func (p ProtobufSerde) Unmarshal(data []byte, v any) error {
 
 	value = value.Elem()
 
+	if len(data) < 4 {
+		return fmt.Errorf("data too small, expected at least 4 bytes for header, got %d", len(data))
+	}
+
 	headerSize := binary.BigEndian.Uint32(data[:4])
-	if len(data) < int(4+headerSize) {
+
+	// Check for overflow and ensure we have enough data
+	if headerSize > uint32(len(data)-4) {
 		return fmt.Errorf("data size is smaller than header size, probably corrupted data")
 	}
 
@@ -190,10 +196,6 @@ func fromProtoToDomain(msg *protogenerated.Resposta, value reflect.Value) error 
 	bodyField = bodyField.Elem()
 
 	okMsg.Dados["timestamp"] = okMsg.Timestamp
-
-	for key, value := range okMsg.Dados {
-		slog.Info("here", "key", key, "value", value)
-	}
 
 	return bindStructFields(bodyField, okMsg.Dados)
 }
