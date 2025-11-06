@@ -1,3 +1,9 @@
+## [1.14.1](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.14.0...v1.14.1) (2025-11-06)
+
+### Bug Fixes
+
+* **string_serde:** missing error message when non ok status code ([0d1023a](https://github.com/talDoFlemis/triprotocol-benchmark/commit/0d1023ad35758bf3c2cc8f8dcc824a05e52ff0fd))
+
 ## [1.14.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.13.2...v1.14.0) (2025-11-06)
 
 ### Features
