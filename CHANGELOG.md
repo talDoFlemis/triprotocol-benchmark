@@ -1,3 +1,9 @@
+## [1.13.1](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.13.0...v1.13.1) (2025-11-06)
+
+### Documentation
+
+* **README:** add docker run section ([9271cad](https://github.com/talDoFlemis/triprotocol-benchmark/commit/9271cad3cb49d0ba60f8816764141fc76a598e7d))
+
 ## [1.13.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.12.0...v1.13.0) (2025-11-05)
 
 ### Features
