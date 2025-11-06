@@ -37,6 +37,5 @@ COPY --from=user /tmp/debug.log ./
 
 USER scratchuser
 STOPSIGNAL SIGINT
-EXPOSE 8080
 
-CMD ["/app/tui", "-direction=up"]
+CMD ["/app/tui"]

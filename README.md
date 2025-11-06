@@ -40,6 +40,7 @@ docker run --rm --pull always -it ghcr.io/taldoflemis/triprotocol-benchmark/tui:
 ```
 
 This command will:
+
 - Pull the latest image from GitHub Container Registry
 - Run the interactive TUI (Terminal User Interface)
 - Automatically remove the container when you exit
@@ -48,7 +49,7 @@ This command will:
 **Note**: The TUI requires an interactive terminal (`-it` flags). For headless server mode, use:
 
 ```bash
-docker run --rm --pull always -p 8080:8080 ghcr.io/taldoflemis/triprotocol-benchmark/tui:latest
+docker run -it --pull always ghcr.io/taldoflemis/triprotocol-benchmark/tui:latest
 ```
 
 ## �🛠️ Requirements
@@ -61,17 +62,20 @@ docker run --rm --pull always -p 8080:8080 ghcr.io/taldoflemis/triprotocol-bench
 ## 📦 Installation
 
 1. **Clone the repository**
+
 ```bash
 git clone https://github.com/taldoflemis/triprotocol-benchmark.git
 cd triprotocol-benchmark
 ```
 
 2. **Install Go dependencies**
+
 ```bash
 go mod download
 ```
 
 3. **Generate Protocol Buffer code**
+
 ```bash
 # For Go
 task proto:gen
@@ -89,12 +93,6 @@ The application can be run in different modes:
 ```bash
 # Run with default settings
 go run .
-
-# Run as an HTTP server (headless mode)
-go run . -direction=up
-
-# Run with custom configuration
-go run . -config=path/to/config.yaml
 ```
 
 ### Using the TUI
@@ -102,11 +100,13 @@ go run . -config=path/to/config.yaml
 The Terminal User Interface provides an interactive way to test the serialization protocols:
 
 1. Launch the TUI:
+
 ```bash
 go run .
 ```
 
 2. Navigate through the interface using:
+
    - **Tab**: Switch between input fields
    - **Enter**: Submit requests
    - **Arrow keys**: Navigate through results
@@ -123,17 +123,20 @@ go run .
 The project includes Python scripts for testing each protocol:
 
 **Protocol Buffers Client:**
+
 ```bash
 cd scripts
 python3 proto_requests.py
 ```
 
 **JSON Client:**
+
 ```bash
 python3 json_requests.py
 ```
 
 **String Protocol Client:**
+
 ```bash
 python3 string_request.py
 ```
@@ -143,6 +146,7 @@ python3 string_request.py
 ### Prerequisites
 
 Install Task runner (optional but recommended):
+
 ```bash
 go install github.com/go-task/task/v3/cmd/task@latest
 ```
@@ -197,6 +201,7 @@ docker run -p 8080:8080 triprotocol-benchmark
 ```
 
 The Dockerfile uses multi-stage builds for optimal image size and security:
+
 - Builder stage with Go 1.25.3
 - Final stage using scratch image
 - Non-root user execution
@@ -243,20 +248,20 @@ graph TB
         Domain[Domain Entities]
         AppLayer[AppLayerClient]
     end
-    
+
     subgraph "Presentation Layer"
         Serde[Serde Interface]
         String[StringSerde]
         JSON[JSONSerde]
         Proto[ProtobufSerde]
     end
-    
+
     subgraph "Transport Layer"
         RT[RoundTripper Interface]
         TCP[TCPRoundTripper]
         UDP[UDPRoundTripper]
     end
-    
+
     Domain --> AppLayer
     AppLayer --> Serde
     Serde --> String
@@ -265,7 +270,7 @@ graph TB
     AppLayer --> RT
     RT --> TCP
     RT --> UDP
-    
+
     String --> RT
     JSON --> RT
     Proto --> RT
@@ -281,23 +286,24 @@ classDiagram
         <<interface>>
         +RequestReply(ctx, address, request) response, error
     }
-    
+
     class TCPRoundTripper {
         -DialTimeout time.Duration
         -WriteTimeout time.Duration
         -ReadTimeout time.Duration
         +RequestReply(ctx, address, request) response, error
     }
-    
+
     class UDPRoundTripper {
         +RequestReply(ctx, address, request) response, error
     }
-    
+
     RoundTripper <|.. TCPRoundTripper
     RoundTripper <|.. UDPRoundTripper
 ```
 
 **Key Benefits:**
+
 - Swap between TCP and UDP without changing application logic
 - Easy to add new transport protocols (HTTP/3, QUIC, etc.)
 - Centralized timeout and connection management
@@ -313,28 +319,29 @@ classDiagram
         +Marshal(v any) bytes, error
         +Unmarshal(data bytes, v any) error
     }
-    
+
     class StringSerde {
         +Marshal(v any) bytes, error
         +Unmarshal(data bytes, v any) error
     }
-    
+
     class JSONSerde {
         +Marshal(v any) bytes, error
         +Unmarshal(data bytes, v any) error
     }
-    
+
     class ProtobufSerde {
         +Marshal(v any) bytes, error
         +Unmarshal(data bytes, v any) error
     }
-    
+
     Serde <|.. StringSerde
     Serde <|.. JSONSerde
     Serde <|.. ProtobufSerde
 ```
 
 **Key Benefits:**
+
 - Single domain model works with all serialization formats
 - Add new formats without touching business logic
 - Protocol-agnostic application code
@@ -348,7 +355,7 @@ sequenceDiagram
     participant Serde as Serde Implementation
     participant RT as RoundTripper
     participant Server as Remote Server
-    
+
     Client->>AppLayer: Do(ctx, address, request, token)
     AppLayer->>AppLayer: Wrap in PresentationLayerRequest
     AppLayer->>Serde: Marshal(request)
@@ -375,12 +382,12 @@ graph LR
         Op[OperationRequest]
         Logout[LogoutRequest]
     end
-    
+
     subgraph Presentation["Presentation Layer"]
         PLR["PresentationLayerRequest
         (Token + Body)"]
     end
-    
+
     subgraph Serialization["Serialization Formats"]
         String["String Format
         (KEY=VALUE)"]
@@ -389,15 +396,15 @@ graph LR
         Proto["Protobuf Format
         (Binary)"]
     end
-    
+
     Auth --> PLR
     Op --> PLR
     Logout --> PLR
-    
+
     PLR --> String
     PLR --> JSON
     PLR --> Proto
-    
+
     String --> Wire[Wire Protocol]
     JSON --> Wire
     Proto --> Wire
@@ -414,21 +421,21 @@ authReq := &AuthRequest{
 
 // Works with String serializer
 stringClient := NewAppLayerClient[OperationRequest, OperationResponse](
-    &StringSerde{}, 
+    &StringSerde{},
     &TCPRoundTripper{},
     settings,
 )
 
 // Works with JSON serializer
 jsonClient := NewAppLayerClient[OperationRequest, OperationResponse](
-    &JSONSerde{}, 
+    &JSONSerde{},
     &TCPRoundTripper{},
     settings,
 )
 
 // Works with Protobuf serializer
 protoClient := NewAppLayerClient[OperationRequest, OperationResponse](
-    &ProtobufSerde{}, 
+    &ProtobufSerde{},
     &TCPRoundTripper{},
     settings,
 )
