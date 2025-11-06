@@ -287,9 +287,7 @@ func TestStringDeserialization(t *testing.T) {
 					},
 					MostUsedOperations: [][]any{
 						{
-							[]any{
-								"status", 1.0,
-							},
+							"status", 1,
 						},
 					},
 					Timestamp:        NonISO8601Time{time.Date(2025, 10, 31, 01, 14, 19, 615292000, time.UTC)},
