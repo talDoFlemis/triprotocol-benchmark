@@ -68,7 +68,7 @@ func (p ProtobufSerde) Unmarshal(data []byte, v any) error {
 
 	// Check for overflow and ensure we have enough data
 	if headerSize > uint32(len(data)-4) {
-		return fmt.Errorf("data size is smaller than header size, probably corrupted data")
+		return fmt.Errorf("data size is smaller than header size, probably corrupted data. Expected at least %d bytes, got %d bytes", headerSize+4, len(data)-4)
 	}
 
 	data = data[4 : 4+headerSize]
