@@ -1,3 +1,16 @@
+## [1.15.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.14.1...v1.15.0) (2025-11-08)
+
+### Features
+
+* add slides ([9add83d](https://github.com/talDoFlemis/triprotocol-benchmark/commit/9add83defca5a1ef71bcbaf4a8520ec6c006ff8c))
+* **protobuf_serde:** handle invalid data ([e92e06a](https://github.com/talDoFlemis/triprotocol-benchmark/commit/e92e06ad832b29609d28080ce12e01e9e0c8b7f6))
+* starting benchmarks ([7dca251](https://github.com/talDoFlemis/triprotocol-benchmark/commit/7dca2511c92b6024e86fa2fdfeca91a5eb983203))
+
+### Tests
+
+* **string_serde_test:** add tests for handling missing properties, error status return ([27f7a92](https://github.com/talDoFlemis/triprotocol-benchmark/commit/27f7a923ff21428e8e0912971b6b3e530b28814f))
+* **string_serde_test:** fix status ([2610a11](https://github.com/talDoFlemis/triprotocol-benchmark/commit/2610a11768057d3509812f452163fd63be0178b8))
+
 ## [1.14.1](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.14.0...v1.14.1) (2025-11-06)
 
 ### Bug Fixes
