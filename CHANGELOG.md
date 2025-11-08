@@ -1,3 +1,9 @@
+## [1.16.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.15.0...v1.16.0) (2025-11-08)
+
+### Features
+
+* **protobuf_serde:** add better error on headerSize ([d50d5d5](https://github.com/talDoFlemis/triprotocol-benchmark/commit/d50d5d56e6f435ee012133062308beb31a887060))
+
 ## [1.15.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.14.1...v1.15.0) (2025-11-08)
 
 ### Features
