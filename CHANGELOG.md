@@ -1,3 +1,9 @@
+## [1.16.1](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.16.0...v1.16.1) (2025-11-15)
+
+### Bug Fixes
+
+* **domain:** missing fields after some server update and broken iso timestamp too ([e13bb24](https://github.com/talDoFlemis/triprotocol-benchmark/commit/e13bb24e07ef1f62aa862d4c3449381d61cdd24d))
+
 ## [1.16.0](https://github.com/talDoFlemis/triprotocol-benchmark/compare/v1.15.0...v1.16.0) (2025-11-08)
 
 ### Features
