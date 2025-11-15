@@ -382,11 +382,12 @@ func setFieldValueFromString(field reflect.Value, valueStr string) error {
 
 	case reflect.Struct:
 		if field.Type() == reflect.TypeOf(NonISO8601Time{}) {
-			fieldValue, err := time.Parse("2006-01-02T15:04:05.000000", valueStr)
+			time := &NonISO8601Time{}
+			err := time.Parse(valueStr)
 			if err != nil {
 				return err
 			}
-			field.Set(reflect.ValueOf(NonISO8601Time{fieldValue}))
+			field.Set(reflect.ValueOf(*time))
 			return nil
 		}
 

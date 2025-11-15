@@ -66,7 +66,11 @@ func (t *NonISO8601Time) UnmarshalJSON(data []byte) error {
 func (t *NonISO8601Time) Parse(s string) error {
 	parsedTime, err := time.Parse("2006-01-02T15:04:05.000000", s)
 	if err != nil {
-		return err
+		// Try without seconds, because some responses are dumb now
+		parsedTime, err = time.Parse("2006-01-02T15:04", s)
+		if err != nil {
+			return err
+		}
 	}
 	*t = NonISO8601Time{parsedTime}
 	return nil
@@ -320,8 +324,8 @@ type HistoryResponseStats struct {
 
 type HistoryOperationHistoryResponse struct {
 	Operation string         `json:"operacao"`
-	Params    map[string]any `json:"parametros"`
-	Result    map[string]any `json:"resultado"`
+	Params    map[string]any `json:"parametros,omitempty"`
+	Result    map[string]any `json:"resultado,omitempty"`
 	Timestamp NonISO8601Time `json:"timestamp"`
 	Success   bool           `json:"sucesso"`
 }
@@ -333,7 +337,7 @@ type HistoryResponse struct {
 	History            []HistoryOperationHistoryResponse `json:"historico"`
 	ConsultTimestamp   NonISO8601Time                    `json:"timestamp_consulta"`
 	Stats              HistoryResponseStats              `json:"estatisticas"`
-	MostUsedOperations [][]any                           `json:"operacoes_mais_usadas"`
+	MostUsedOperations [][]any                           `json:"operacoes_mais_usadas,omitempty"`
 	Timestamp          NonISO8601Time                    `json:"timestamp"`
 }
 
